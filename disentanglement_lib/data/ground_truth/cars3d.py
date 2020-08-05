@@ -108,3 +108,7 @@ def _load_mesh(filename):
     pic.thumbnail((64, 64, 3), PIL.Image.ANTIALIAS)
     rescaled_mesh[i, :, :, :] = np.array(pic)
   return rescaled_mesh * 1. / 255
+
+
+if __name__ == "__main__":
+  scenario = Cars3D()
