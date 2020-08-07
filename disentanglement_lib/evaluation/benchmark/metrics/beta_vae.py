@@ -24,6 +24,7 @@ from __future__ import print_function
 from absl import logging
 import numpy as np
 from six.moves import range
+from sklearn import linear_model
 import gin.tf
 
 

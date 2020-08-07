@@ -27,7 +27,7 @@ import numpy as np
 import scipy
 from six.moves import range
 from sklearn.ensemble import GradientBoostingClassifier
-from sklearn.linear_model import Lasso
+from sklearn.linear_model import LogisticRegression
 import gin.tf
 
 
@@ -84,21 +84,21 @@ def _compute_dci(mus_train, ys_train, mus_test, ys_test, mus_eval, ys_eval, mode
   """Computes score based on both training and testing codes and factors."""
   scores = {}
   
-  
-  
-  
-  
-  
   if mode == "gbt":
       selected_predictors = hyperparam_search_gbt(mus_train, ys_train, mus_eval, ys_eval)      
-  if mode == "L1":
-      selected_predictors = hyperparam_search_L1(mus_train, ys_train, mus_eval, ys_eval)
-      
-  importance_matrix, train_err, test_err = compute_importance(mus_train, 
+      importance_matrix, train_err, test_err = compute_importance_gbt(mus_train, 
                                                                   ys_train,
                                                                   mus_test,
                                                                   ys_test, 
                                                                   selected_predictors)
+  if mode == "L1":
+      selected_predictors = hyperparam_search_LogRegL1(mus_train, ys_train, mus_eval, ys_eval)
+      importance_matrix, train_err, test_err = compute_importance_LogRegL1(mus_train, 
+                                                                  ys_train,
+                                                                  mus_test,
+                                                                  ys_test, 
+                                                                  selected_predictors)
+  
 
   assert importance_matrix.shape[0] == mus_train.shape[0]
   assert importance_matrix.shape[1] == ys_train.shape[0]
@@ -109,18 +109,17 @@ def _compute_dci(mus_train, ys_train, mus_test, ys_test, mus_eval, ys_eval, mode
   return scores
 
 
-
-
-def hyperparam_search_L1(x_train, y_train, x_eval, y_eval):
+def hyperparam_search_LogRegL1(x_train, y_train, x_eval, y_eval):
     num_factors = y_train.shape[0]
-    alphas = np.arange(0,2, 0.1)
+    alphas = np.arange(0.005, 0.15, 0.005)
+    Cs = np.abs(alphas - 1) # LogisticRegression alpha is passed as C which is inverse of regularization
     
     results = np.zeros((len(alphas), num_factors))
     models = [[None for f in range(num_factors)] for a in alphas]
     selected_predictors = [None for f in range(num_factors)]
-    for a, alpha in enumerate(alphas):
+    for a, alpha in enumerate(Cs):
         for i in range(num_factors):
-            model = Lasso(alpha=alpha)
+            model = LogisticRegression(penalty='l1', C=alpha, solver='liblinear')
             model.fit(x_train.T, y_train[i, :])
             models[a][i] = model
             results[a, i] = np.mean(model.predict(x_eval.T) == y_eval[i, :])
@@ -152,7 +151,7 @@ def hyperparam_search_gbt(x_train, y_train, x_eval, y_eval, min_depth = 2, max_d
         
     return selected_predictors
 
-def compute_importance(x_train, y_train, x_test, y_test, selected_predictors):
+def compute_importance_gbt(x_train, y_train, x_test, y_test, selected_predictors):
   """Compute importance based on gradient boosted trees."""
   num_factors = y_train.shape[0]
   num_codes = x_train.shape[0]
@@ -163,6 +162,39 @@ def compute_importance(x_train, y_train, x_test, y_test, selected_predictors):
   for i in range(num_factors):
     model = selected_predictors[i]
     importance_matrix[:, i] = np.abs(model.feature_importances_)
+    train_loss.append(np.mean(model.predict(x_train.T) == y_train[i, :]))
+    test_loss.append(np.mean(model.predict(x_test.T) == y_test[i, :]))
+  return importance_matrix, np.mean(train_loss), np.mean(test_loss)
+
+def compute_importance_LogRegL1(x_train, y_train, x_test, y_test, selected_predictors):
+  """Compute importance based on gradient boosted trees."""
+  num_factors = y_train.shape[0]
+  num_codes = x_train.shape[0]
+  importance_matrix = np.zeros(shape=[num_codes, num_factors],
+                               dtype=np.float64)
+  train_loss = []
+  test_loss = []
+  for i in range(num_factors):
+    model = selected_predictors[i]
+    
+    ### NOT SURE ABOUT THIS ONE MIGHT NOT WORK
+    importance_matrix[:, i] = np.sum(np.abs(model.coef_), axis=0)
+    
+    train_loss.append(np.mean(model.predict(x_train.T) == y_train[i, :]))
+    test_loss.append(np.mean(model.predict(x_test.T) == y_test[i, :]))
+  return importance_matrix, np.mean(train_loss), np.mean(test_loss)
+
+def compute_importance_L1(x_train, y_train, x_test, y_test, selected_predictors):
+  """Compute importance based on gradient boosted trees."""
+  num_factors = y_train.shape[0]
+  num_codes = x_train.shape[0]
+  importance_matrix = np.zeros(shape=[num_codes, num_factors],
+                               dtype=np.float64)
+  train_loss = []
+  test_loss = []
+  for i in range(num_factors):
+    model = selected_predictors[i]
+    importance_matrix[:, i] = np.abs(model.coef_)
     train_loss.append(np.mean(model.predict(x_train.T) == y_train[i, :]))
     test_loss.append(np.mean(model.predict(x_test.T) == y_test[i, :]))
   return importance_matrix, np.mean(train_loss), np.mean(test_loss)

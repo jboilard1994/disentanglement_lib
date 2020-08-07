@@ -27,6 +27,10 @@ class DataHolder:
         len of a class object is len of the dataset, represented by csv filepaths""" 
         return len(self.factors)
     
+    def reset(self):
+        self.sampling.reset_sampling_objects()
+        pass
+    
     @property
     def num_factors(self):
         """ @author: jboilard
