@@ -102,10 +102,10 @@ def _compute_dci(mus_train, ys_train, mus_test, ys_test, mus_eval, ys_eval, mode
 
   assert importance_matrix.shape[0] == mus_train.shape[0]
   assert importance_matrix.shape[1] == ys_train.shape[0]
-  scores["DCI_informativeness_train"] = train_err
-  scores["DCI_informativeness_test"] = test_err
-  scores["DCI_disentanglement"] = disentanglement(importance_matrix)
-  scores["DCI_completeness"] = completeness(importance_matrix)
+  scores["DCI_{}_informativeness_train".format(mode)] = train_err
+  scores["DCI_{}_informativeness_test".format(mode)] = test_err
+  scores["DCI_{}_disentanglement".format(mode)] = disentanglement(importance_matrix)
+  scores["DCI_{}_completeness".format(mode)] = completeness(importance_matrix)
   return scores
 
 
@@ -113,9 +113,11 @@ def hyperparam_search_LogRegL1(x_train, y_train, x_eval, y_eval):
     num_factors = y_train.shape[0]
     alphas = np.arange(0.005, 0.15, 0.005)
     Cs = np.abs(alphas - 1) # LogisticRegression alpha is passed as C which is inverse of regularization
+    Cs = np.append(Cs, 1)
     
-    results = np.zeros((len(alphas), num_factors))
-    models = [[None for f in range(num_factors)] for a in alphas]
+    
+    results = np.zeros((len(Cs), num_factors))
+    models = [[None for f in range(num_factors)] for a in Cs]
     selected_predictors = [None for f in range(num_factors)]
     for a, alpha in enumerate(Cs):
         for i in range(num_factors):

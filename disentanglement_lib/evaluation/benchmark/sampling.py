@@ -49,7 +49,7 @@ class FactorObservationSampling(object):
     @property
     def num_latent_factors(self):
         return len(self.latent_factor_indices)
-        
+      
     def get_sampling_elements(self, factors, observation_ids):
         """ @author: jboilard
         Called at class object initialization, initializes sampling_list, 
@@ -253,11 +253,11 @@ class FactorObservationSampling(object):
                     no_sample_available = True
         return factor_id
 
-
-    def get_possible_indexes(self, lock_list, random_state):
-        """ from a list of factor values, get all possible values for sampling"""
+    
+    def get_possible_indexes(self, factors_lock, random_state):
+        """ from defined unlocked (-1) and locked factors, get all possible values for sampling"""
         factor_list = [[]]
-        for i, lock_val in enumerate(lock_list):
+        for i, lock_val in enumerate(factors_lock):
             ## if unlocked, number of possible factor-samples are multiplied by the number of possible unlocked factor values
             if lock_val == -1 : 
                 base = factor_list
@@ -286,6 +286,7 @@ class FactorObservationSampling(object):
         state_space_index = self._features_to_state_space_index(features)
         return self.state_space_to_save_space_index[state_space_index]
 
+    
     def _features_to_state_space_index(self, features):
         """Returns the indices in the atom space for given factor configurations.
     

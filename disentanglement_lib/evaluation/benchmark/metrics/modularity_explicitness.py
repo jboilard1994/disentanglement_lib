@@ -21,7 +21,7 @@ Based on "Learning Deep Disentangled Embeddings With the F-Statistic Loss"
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
-from disentanglement_lib.evaluation.metrics import utils
+from disentanglement_lib.evaluation.benchmark.metrics import utils
 import numpy as np
 from six.moves import range
 from sklearn.linear_model import LogisticRegression
@@ -32,10 +32,9 @@ import gin.tf
 
 @gin.configurable(
     "modularity_explicitness",
-    blacklist=["ground_truth_data", "representation_function", "random_state",
+    blacklist=["dataholder", "random_state",
                "artifact_dir"])
-def compute_modularity_explicitness(ground_truth_data,
-                                    representation_function,
+def compute_modularity_explicitness(dataholder,
                                     random_state,
                                     artifact_dir=None,
                                     num_train=gin.REQUIRED,
@@ -60,17 +59,21 @@ def compute_modularity_explicitness(ground_truth_data,
   del artifact_dir
   scores = {}
   mus_train, ys_train = utils.generate_batch_factor_code(
-      ground_truth_data, representation_function, num_train,
+      dataholder, num_train,
       random_state, batch_size)
   mus_test, ys_test = utils.generate_batch_factor_code(
-      ground_truth_data, representation_function, num_test,
+      dataholder, num_test,
       random_state, batch_size)
-  discretized_mus = utils.make_discretizer(mus_train)
-  mutual_information = utils.discrete_mutual_info(discretized_mus, ys_train)
+  
+  all_mus = np.transpose(dataholder.embed_codes)
+  all_ys = np.transpose(dataholder.factors)
+  
+  discretized_mus = utils.make_discretizer(all_mus)
+  mutual_information = utils.discrete_mutual_info(discretized_mus, all_ys)
   # Mutual information should have shape [num_codes, num_factors].
   assert mutual_information.shape[0] == mus_train.shape[0]
   assert mutual_information.shape[1] == ys_train.shape[0]
-  scores["modularity_score"] = modularity(mutual_information)
+  scores["MODEX_modularity_score"] = modularity(mutual_information)
   explicitness_score_train = np.zeros([ys_train.shape[0], 1])
   explicitness_score_test = np.zeros([ys_test.shape[0], 1])
   mus_train_norm, mean_mus, stddev_mus = utils.normalize_data(mus_train)
@@ -79,8 +82,8 @@ def compute_modularity_explicitness(ground_truth_data,
     explicitness_score_train[i], explicitness_score_test[i] = \
         explicitness_per_factor(mus_train_norm, ys_train[i, :],
                                 mus_test_norm, ys_test[i, :])
-  scores["explicitness_score_train"] = np.mean(explicitness_score_train)
-  scores["explicitness_score_test"] = np.mean(explicitness_score_test)
+  scores["MODEX_explicitness_score_train"] = np.mean(explicitness_score_train)
+  scores["MODEX_explicitness_score_test"] = np.mean(explicitness_score_test)
   return scores
 
 

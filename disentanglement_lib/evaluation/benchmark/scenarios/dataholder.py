@@ -21,23 +21,31 @@ class DataHolder:
         self.n_factors = len(self.factor_sizes)
         self.sampling = FactorObservationSampling(self.factor_sizes, self.factors_indices, self.factors, list(range(len(self.factors))))
         
+    @property
+    def num_factors(self):
+        """ @author: jboilard
+        returns numbers of features used to evaluate disentanglement, features which are defined in gin .bind config file """
+        return self.n_factors
+       
+    @property
+    def factors_num_values(self):
+        return self.factor_sizes
+    
     
     def __len__(self):
         """ @author: jboilard
         len of a class object is len of the dataset, represented by csv filepaths""" 
         return len(self.factors)
     
+       
+    
+    
+    
     def reset(self):
         self.sampling.reset_sampling_objects()
         pass
     
-    @property
-    def num_factors(self):
-        """ @author: jboilard
-        returns numbers of features used to evaluate disentanglement, features which are defined in gin .bind config file """
-        return len(self.factors_list)
-        
-    def sample_factors(self, num, random_state, lock_id=None, factors_to_lock=None):
+    def sample_factors(self, num, random_state, lock_id=None, factors_to_lock=None, reset=False):
         """ @author: jboilard 
         Feature sampling for disentanglement evaluation
         num: number of features to extract
@@ -50,6 +58,9 @@ class DataHolder:
 
         # sample randomly from available bag
         factors, observation_ids = self.sampling.sample_latent_factors(num, random_state)
+        
+        if reset == True:
+            self.reset()
 
         return factors, observation_ids
     
@@ -77,7 +88,15 @@ class DataHolder:
         factors, observation_ids = self.sampling.sample_possible_latent_factors(num, random_state, lock_index, possible_lock_vals)
         return factors, observation_ids
         
-        
+    def getall_representations_from_factors(self, given_factors, random_state):
+        """Sample all possible observations and representations which have the specified factors"""
+        given_factors = np.copy(given_factors).tolist()
+        factors_ids = []
+        for i, features in enumerate(self.factors.tolist()):
+            if features in given_factors:
+                factors_ids.append(i)
+                
+        return np.take(self.embed_codes, factors_ids, axis=0)       
             
             
             

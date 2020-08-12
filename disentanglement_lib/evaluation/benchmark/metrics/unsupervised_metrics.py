@@ -15,7 +15,7 @@
 
 """Unsupervised scores based on code covariance and mutual information."""
 from absl import logging
-from disentanglement_lib.evaluation.metrics import utils
+from disentanglement_lib.evaluation.benchmark.metrics import utils
 import numpy as np
 import scipy
 import gin.tf

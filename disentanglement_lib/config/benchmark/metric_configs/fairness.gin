@@ -13,7 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
-mig.num_train=1000
-discretizer.discretizer_fn = @histogram_discretizer
-discretizer.num_bins = 10
+fairness.num_train=1000
+fairness.num_test_points_per_class=50
+predictor.predictor_fn = @gradient_boosting_classifier

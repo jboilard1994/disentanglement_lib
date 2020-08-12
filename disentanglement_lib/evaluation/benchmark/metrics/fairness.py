@@ -28,7 +28,7 @@ interventions on the sensitive variable. This approach is described in Section
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
-from disentanglement_lib.evaluation.metrics import utils
+from disentanglement_lib.evaluation.benchmark.metrics import utils
 import numpy as np
 from six.moves import range
 import gin.tf
@@ -36,10 +36,9 @@ import gin.tf
 
 @gin.configurable(
     "fairness",
-    blacklist=["ground_truth_data", "representation_function", "random_state",
+    blacklist=["dataholder", "random_state",
                "artifact_dir"])
-def compute_fairness(ground_truth_data,
-                     representation_function,
+def compute_fairness(dataholder,
                      random_state,
                      artifact_dir=None,
                      num_train=gin.REQUIRED,
@@ -67,14 +66,14 @@ def compute_fairness(ground_truth_data,
     Dictionary with scores.
   """
   del artifact_dir
-  factor_counts = ground_truth_data.factors_num_values
+  factor_counts = dataholder.factors_num_values
   num_factors = len(factor_counts)
 
   scores = {}
   # Training a predictive model.
   mus_train, ys_train = utils.generate_batch_factor_code(
-      ground_truth_data, representation_function, num_train, random_state,
-      batch_size)
+      dataholder, num_train, random_state,
+      batch_size, reset=True)
   predictor_model_fn = utils.make_predictor_fn()
 
   # For each factor train a single predictive model.
@@ -82,27 +81,25 @@ def compute_fairness(ground_truth_data,
   max_fairness = np.zeros((num_factors, num_factors), dtype=np.float64)
   for i in range(num_factors):
     model = predictor_model_fn()
-    model.fit(np.transpose(mus_train), ys_train[i, :])
+    model.fit(np.transpose(mus_train), ys_train[i, :]) ####### CHECK #########
 
     for j in range(num_factors):
       if i == j:
         continue
       # Sample a random set of factors once.
-      original_factors = ground_truth_data.sample_factors(
-          num_test_points_per_class, random_state)
+      original_factors, current_observations_ids = dataholder.sample_factors(num_test_points_per_class, random_state, reset=True)
       counts = np.zeros((factor_counts[i], factor_counts[j]), dtype=np.int64)
+      
       for c in range(factor_counts[j]):
         # Intervene on the sensitive attribute.
         intervened_factors = np.copy(original_factors)
         intervened_factors[:, j] = c
+        
         # Obtain the batched observations.
-        observations = ground_truth_data.sample_observations_from_factors(
-            intervened_factors, random_state)
-        representations = utils.obtain_representation(observations,
-                                                      representation_function,
-                                                      batch_size)
+        representations = dataholder.getall_representations_from_factors(intervened_factors, random_state)
+        
         # Get the predictions.
-        predictions = model.predict(np.transpose(representations))
+        predictions = model.predict(representations)
         # Update the counts.
         counts[:, c] = np.bincount(predictions, minlength=factor_counts[i])
       mean_fairness[i, j], max_fairness[i, j] = inter_group_fairness(counts)

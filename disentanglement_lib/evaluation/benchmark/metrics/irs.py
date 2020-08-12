@@ -22,17 +22,16 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from absl import logging
-from disentanglement_lib.evaluation.metrics import utils
+from disentanglement_lib.evaluation.benchmark.metrics import utils
 import numpy as np
 import gin.tf
 
 
 @gin.configurable(
     "irs",
-    blacklist=["ground_truth_data", "representation_function", "random_state",
+    blacklist=["dataholder", "random_state",
                "artifact_dir"])
-def compute_irs(ground_truth_data,
-                representation_function,
+def compute_irs(dataholder,
                 random_state,
                 artifact_dir=None,
                 diff_quantile=0.99,
@@ -56,8 +55,7 @@ def compute_irs(ground_truth_data,
   """
   del artifact_dir
   logging.info("Generating training set.")
-  mus, ys = utils.generate_batch_factor_code(ground_truth_data,
-                                             representation_function, num_train,
+  mus, ys = utils.generate_batch_factor_code(dataholder, num_train,
                                              random_state, batch_size)
   assert mus.shape[1] == num_train
 

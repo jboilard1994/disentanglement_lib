@@ -27,7 +27,7 @@ import gin.tf
 
 
 def generate_batch_factor_code(dataholder,
-                               num_points, random_state, batch_size):
+                               num_points, random_state, batch_size, reset=False):
   """Sample a single training sample based on a mini-batch of ground-truth data.
 
   Args:
@@ -55,6 +55,10 @@ def generate_batch_factor_code(dataholder,
       factors = np.vstack((factors, current_factors))
       representations = np.vstack((representations, np.take(dataholder.embed_codes, current_observations_ids, axis=0)))
     i += num_points_iter
+    
+  if reset == True:
+      dataholder.reset()
+      
   return np.transpose(representations), np.transpose(factors)
 
 

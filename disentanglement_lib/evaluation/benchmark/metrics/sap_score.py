@@ -22,19 +22,19 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from absl import logging
-from disentanglement_lib.evaluation.metrics import utils
+from disentanglement_lib.evaluation.benchmark.metrics import utils
 import numpy as np
 from six.moves import range
 from sklearn import svm
+from sklearn.linear_model import LogisticRegression
 import gin.tf
 
 
 @gin.configurable(
     "sap_score",
-    blacklist=["ground_truth_data", "representation_function", "random_state",
+    blacklist=["dataholder", "random_state",
                "artifact_dir"])
-def compute_sap(ground_truth_data,
-                representation_function,
+def compute_sap(dataholder,
                 random_state,
                 artifact_dir=None,
                 num_train=gin.REQUIRED,
@@ -60,10 +60,10 @@ def compute_sap(ground_truth_data,
   del artifact_dir
   logging.info("Generating training set.")
   mus, ys = utils.generate_batch_factor_code(
-      ground_truth_data, representation_function, num_train,
+      dataholder, num_train,
       random_state, batch_size)
   mus_test, ys_test = utils.generate_batch_factor_code(
-      ground_truth_data, representation_function, num_test,
+      dataholder, num_test,
       random_state, batch_size)
   logging.info("Computing score matrix.")
   return _compute_sap(mus, ys, mus_test, ys_test, continuous_factors)
@@ -108,7 +108,7 @@ def compute_score_matrix(mus, ys, mus_test, ys_test, continuous_factors):
         # Attribute is considered discrete.
         mu_i_test = mus_test[i, :]
         y_j_test = ys_test[j, :]
-        classifier = svm.LinearSVC(C=0.01, class_weight="balanced")
+        classifier = LogisticRegression()
         classifier.fit(mu_i[:, np.newaxis], y_j)
         pred = classifier.predict(mu_i_test[:, np.newaxis])
         score_matrix[i, j] = np.mean(pred == y_j_test)

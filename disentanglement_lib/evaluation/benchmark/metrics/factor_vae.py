@@ -21,7 +21,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from absl import logging
-from disentanglement_lib.evaluation.metrics import utils
+from disentanglement_lib.evaluation.benchmark.metrics import utils
 import numpy as np
 from six.moves import range
 import gin.tf
@@ -29,16 +29,13 @@ import gin.tf
 
 @gin.configurable(
     "factor_vae_score",
-    blacklist=["ground_truth_data", "representation_function", "random_state",
-               "artifact_dir"])
-def compute_factor_vae(ground_truth_data,
-                       representation_function,
+    blacklist=["dataholder", "random_state", "artifact_dir"])
+def compute_factor_vae(dataholder,
                        random_state,
                        artifact_dir=None,
                        batch_size=gin.REQUIRED,
                        num_train=gin.REQUIRED,
-                       num_eval=gin.REQUIRED,
-                       num_variance_estimate=gin.REQUIRED):
+                       num_eval=gin.REQUIRED):
   """Computes the FactorVAE disentanglement metric.
 
   Args:
@@ -59,9 +56,8 @@ def compute_factor_vae(ground_truth_data,
   """
   del artifact_dir
   logging.info("Computing global variances to standardise.")
-  global_variances = _compute_variances(ground_truth_data,
-                                        representation_function,
-                                        num_variance_estimate, random_state)
+  global_variances = _compute_variances(dataholder)
+  
   active_dims = _prune_dims(global_variances)
   scores_dict = {}
 
@@ -72,10 +68,11 @@ def compute_factor_vae(ground_truth_data,
     return scores_dict
 
   logging.info("Generating training set.")
-  training_votes = _generate_training_batch(ground_truth_data,
-                                            representation_function, batch_size,
+  training_votes = _generate_training_batch(dataholder,
+                                            batch_size,
                                             num_train, random_state,
                                             global_variances, active_dims)
+  
   classifier = np.argmax(training_votes, axis=0)
   other_index = np.arange(training_votes.shape[1])
 
@@ -85,8 +82,7 @@ def compute_factor_vae(ground_truth_data,
   logging.info("Training set accuracy: %.2g", train_accuracy)
 
   logging.info("Generating evaluation set.")
-  eval_votes = _generate_training_batch(ground_truth_data,
-                                        representation_function, batch_size,
+  eval_votes = _generate_training_batch(dataholder, batch_size,
                                         num_eval, random_state,
                                         global_variances, active_dims)
 
@@ -94,8 +90,8 @@ def compute_factor_vae(ground_truth_data,
   eval_accuracy = np.sum(eval_votes[classifier,
                                     other_index]) * 1. / np.sum(eval_votes)
   logging.info("Evaluation set accuracy: %.2g", eval_accuracy)
-  scores_dict["train_accuracy"] = train_accuracy
-  scores_dict["eval_accuracy"] = eval_accuracy
+  scores_dict["FVAE_train_accuracy"] = train_accuracy
+  scores_dict["FVAE_eval_accuracy"] = eval_accuracy
   scores_dict["num_active_dims"] = len(active_dims)
   return scores_dict
 
@@ -107,34 +103,19 @@ def _prune_dims(variances, threshold=0.):
   return scale_z >= threshold
 
 
-def _compute_variances(ground_truth_data,
-                       representation_function,
-                       batch_size,
-                       random_state,
-                       eval_batch_size=64):
+def _compute_variances(dataholder):
   """Computes the variance for each dimension of the representation.
 
   Args:
     ground_truth_data: GroundTruthData to be sampled from.
-    representation_function: Function that takes observation as input and
-      outputs a representation.
-    batch_size: Number of points to be used to compute the variances.
-    random_state: Numpy random state used for randomness.
-    eval_batch_size: Batch size used to eval representation.
-
   Returns:
     Vector with the variance of each dimension.
   """
-  observations = ground_truth_data.sample_observations(batch_size, random_state)
-  representations = utils.obtain_representation(observations,
-                                                representation_function,
-                                                eval_batch_size)
-  representations = np.transpose(representations)
-  assert representations.shape[0] == batch_size
+  representations = dataholder.embed_codes
   return np.var(representations, axis=0, ddof=1)
 
 
-def _generate_training_sample(ground_truth_data, representation_function,
+def _generate_training_sample(dataholder,
                               batch_size, random_state, global_variances,
                               active_dims):
   """Sample a single training sample based on a mini-batch of ground-truth data.
@@ -153,23 +134,40 @@ def _generate_training_sample(ground_truth_data, representation_function,
     factor_index: Index of factor coordinate to be used.
     argmin: Index of representation coordinate with the least variance.
   """
+  factors = []
+  observationIds = []
+  
   # Select random coordinate to keep fixed.
-  factor_index = random_state.randint(ground_truth_data.num_factors)
-  # Sample two mini batches of latent variables.
-  factors = ground_truth_data.sample_factors(batch_size, random_state)
-  # Fix the selected factor across mini-batch.
-  factors[:, factor_index] = factors[0, factor_index]
-  # Obtain the observations.
-  observations = ground_truth_data.sample_observations_from_factors(
-      factors, random_state)
-  representations = representation_function(observations)
+  index_lock, possible_lock_vals = dataholder.sampling.sample_possible_locking(batch_size, random_state, mode="fvae")
+  
+  # Sample two mini batches of latent variables with same values at locked factor.
+  factor, observationId = dataholder.sample_factors_with_locking_possibilities(1, random_state, index_lock, possible_lock_vals)
+  factors.append(factor[0])
+  observationIds.append(observationId[0])
+  
+  for i in range(batch_size-1):
+      factor2, observationId2 = dataholder.sample_with_locked_factors(random_state, index_lock, factor)
+      factors.append(factor2[0])
+      observationIds.append(observationId2[0])
+      
+  factors = np.asarray(factors)
+  observationIds = np.asarray(observationIds)
+  
+  # Obtain the representations.
+  representations = np.take(dataholder.embed_codes, observationIds, axis=0)
+  
+  #Get local variances, arg min of weighted local variance is a majority vote classifier training point
   local_variances = np.var(representations, axis=0, ddof=1)
-  argmin = np.argmin(local_variances[active_dims] /
-                     global_variances[active_dims])
-  return factor_index, argmin
+  weighted_local_variances = local_variances/ global_variances  
+  for i, weighted_var in enumerate(weighted_local_variances):
+      if active_dims[i] == False:
+          weighted_local_variances[i] = np.finfo(float).max
+  
+  argmin = np.argmin(weighted_local_variances)
+  return index_lock, argmin
 
 
-def _generate_training_batch(ground_truth_data, representation_function,
+def _generate_training_batch(dataholder,
                              batch_size, num_points, random_state,
                              global_variances, active_dims):
   """Sample a set of training samples based on a batch of ground-truth data.
@@ -188,11 +186,10 @@ def _generate_training_batch(ground_truth_data, representation_function,
   Returns:
     (num_factors, dim_representation)-sized numpy array with votes.
   """
-  votes = np.zeros((ground_truth_data.num_factors, global_variances.shape[0]),
+  votes = np.zeros((dataholder.num_factors, global_variances.shape[0]),
                    dtype=np.int64)
   for _ in range(num_points):
-    factor_index, argmin = _generate_training_sample(ground_truth_data,
-                                                     representation_function,
+    factor_index, argmin = _generate_training_sample(dataholder,
                                                      batch_size, random_state,
                                                      global_variances,
                                                      active_dims)

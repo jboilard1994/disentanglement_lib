@@ -35,10 +35,11 @@ class ScenarioNoise(DataHolder):
   def __init__(self, seed, alpha, num_factors = 2, val_per_factor = 10, K=1):
       self.K = K
       self.alpha = alpha
-       
-      self.factor_sizes = [val_per_factor]*num_factors
+      self.val_per_factor = val_per_factor  
+      
       self.random_state = np.random.RandomState(seed)
      
+      self.factor_sizes = [val_per_factor]*num_factors
       features = cartesian([np.array(list(range(i))) for i in self.factor_sizes])
 
       dataset_features, self.observations, representations = self._load_data(K, features, num_factors, alpha)
@@ -46,12 +47,9 @@ class ScenarioNoise(DataHolder):
       DataHolder.__init__(self, dataset_features, representations)
       
       pass
-      
-  
-    
-   #Make artificially generated code   
+          
   def _load_data(self, K, features, num_factors, alpha):
-     
+    #Make artificially generated code 
     dataset_features = []  
     observations = []  
     representations = []
@@ -70,7 +68,7 @@ class ScenarioNoise(DataHolder):
             
         #generate representations which are perfect with noise induction
         for k in range(K):
-            noise = self.random_state.normal(size=num_factors)
+            noise = self.random_state.uniform(low=-1, high=1, size=num_factors)
             rep = noise*alpha + np.matmul(observation, R)*(1-alpha)
             
             dataset_features.append(factor_features)
