@@ -61,24 +61,30 @@ def compute_sap(dataholder,
   logging.info("Generating training set.")
   mus, ys = utils.generate_batch_factor_code(
       dataholder, num_train,
-      random_state, batch_size)
+      random_state, batch_size, continuous=continuous_factors)
   mus_test, ys_test = utils.generate_batch_factor_code(
       dataholder, num_test,
-      random_state, batch_size)
+      random_state, batch_size, continuous=continuous_factors)
   logging.info("Computing score matrix.")
   return _compute_sap(mus, ys, mus_test, ys_test, continuous_factors)
 
 
 def _compute_sap(mus, ys, mus_test, ys_test, continuous_factors):
   """Computes score based on both training and testing codes and factors."""
-  score_matrix = compute_score_matrix(mus, ys, mus_test,
+  score_matrix, train_matrix = compute_score_matrix(mus, ys, mus_test,
                                       ys_test, continuous_factors)
   # Score matrix should have shape [num_latents, num_factors].
   assert score_matrix.shape[0] == mus.shape[0]
   assert score_matrix.shape[1] == ys.shape[0]
   scores_dict = {}
-  scores_dict["SAP_score"] = compute_avg_diff_top_two(score_matrix)
-  logging.info("SAP score: %.2g", scores_dict["SAP_score"])
+  
+  if continuous_factors == False:
+      scores_dict["SAP_discrete"] = compute_avg_diff_top_two(score_matrix)
+      scores_dict["SAP_discrete_train"] = compute_avg_diff_top_two(train_matrix)
+      logging.info("SAP discrete score: %.2g", scores_dict["SAP_discrete"])
+  else:
+      scores_dict["SAP_continuous"] = compute_avg_diff_top_two(score_matrix)
+      logging.info("SAP continuous score: %.2g", scores_dict["SAP_continuous"]) 
 
   return scores_dict
 
@@ -89,11 +95,15 @@ def compute_score_matrix(mus, ys, mus_test, ys_test, continuous_factors):
   """Compute score matrix as described in Section 3."""
   num_latents = mus.shape[0]
   num_factors = ys.shape[0]
-  score_matrix = np.zeros([num_latents, num_factors])
+  
+  train_score_matrix = np.zeros([num_latents, num_factors])
+  result_score_matrix = np.zeros([num_latents, num_factors])
   for i in range(num_latents):
     for j in range(num_factors):
+
       mu_i = mus[i, :]
-      y_j = ys[j, :]
+      y_j = ys[j, :] 
+      
       if continuous_factors:
         # Attribute is considered continuous.
         cov_mu_i_y_j = np.cov(mu_i, y_j, ddof=1)
@@ -101,18 +111,25 @@ def compute_score_matrix(mus, ys, mus_test, ys_test, continuous_factors):
         var_mu = cov_mu_i_y_j[0, 0]
         var_y = cov_mu_i_y_j[1, 1]
         if var_mu > 1e-12:
-          score_matrix[i, j] = cov_mu_y * 1. / (var_mu * var_y)
+          result_score_matrix[i, j] = cov_mu_y * 1. / (var_mu * var_y)
         else:
-          score_matrix[i, j] = 0.
+          result_score_matrix[i, j] = 0.
       else:
         # Attribute is considered discrete.
+        mu_i = mus[i, :]
+        y_j = ys[j, :]  
         mu_i_test = mus_test[i, :]
         y_j_test = ys_test[j, :]
-        classifier = LogisticRegression()
+        classifier = LogisticRegression(penalty='none', max_iter=500)
         classifier.fit(mu_i[:, np.newaxis], y_j)
+        
         pred = classifier.predict(mu_i_test[:, np.newaxis])
-        score_matrix[i, j] = np.mean(pred == y_j_test)
-  return score_matrix
+        result_score_matrix[i, j] = np.mean(pred == y_j_test)
+        
+        pred = classifier.predict(mu_i[:, np.newaxis])
+        train_score_matrix[i, j] = np.mean(pred == y_j)
+        
+  return result_score_matrix, train_score_matrix
 
 
 def compute_avg_diff_top_two(matrix):

@@ -27,7 +27,7 @@ import gin.tf
 
 
 def generate_batch_factor_code(dataholder,
-                               num_points, random_state, batch_size, reset=False):
+                               num_points, random_state, batch_size, reset=False, continuous=False):
   """Sample a single training sample based on a mini-batch of ground-truth data.
 
   Args:
@@ -44,16 +44,31 @@ def generate_batch_factor_code(dataholder,
   representations = None
   factors = None
   i = 0
+  
+   
   while i < num_points:
     num_points_iter = min(num_points - i, batch_size)
     current_factors, current_observations_ids = \
         dataholder.sample_factors(num_points_iter, random_state)
     if i == 0:
-      factors = current_factors
+    
+      if continuous == False : 
+          factors = current_factors
+      else : 
+          factors = np.take(dataholder.continuous_factors, current_observations_ids, axis=0)
+      
       representations = np.take(dataholder.embed_codes, current_observations_ids, axis=0)
     else:
-      factors = np.vstack((factors, current_factors))
-      representations = np.vstack((representations, np.take(dataholder.embed_codes, current_observations_ids, axis=0)))
+        
+      if continuous == False : 
+          factors = np.vstack((factors, current_factors))
+      else : 
+          cont_factor = np.take(dataholder.continuous_factors, current_observations_ids)
+          factors = np.vstack((factors, cont_factor))
+      
+      rep = np.take(dataholder.embed_codes, current_observations_ids, axis=0)
+      representations = np.vstack((representations, rep))
+      
     i += num_points_iter
     
   if reset == True:
@@ -175,3 +190,28 @@ def logistic_regression_cv():
 def gradient_boosting_classifier():
   """Default gradient boosting classifier."""
   return GradientBoostingClassifier()
+
+def mse(predicted, target):
+    ''' mean square error '''
+    predicted = predicted[:, None] if len(predicted.shape) == 1 else predicted #(n,)->(n,1)
+    target = target[:, None] if len(target.shape) == 1 else target #(n,)->(n,1)
+    err = predicted - target
+    err = err.T.dot(err) / len(err)
+    return err[0, 0] #value not array
+
+def rmse(predicted, target):
+    ''' root mean square error '''
+    return np.sqrt(mse(predicted, target))
+
+def nmse(predicted, target):
+    ''' normalized mean square error '''
+    return mse(predicted, target) / np.var(target)
+
+def nrmse(predicted, target):
+    ''' normalized root mean square error '''
+    return rmse(predicted, target) / np.std(target)
+
+def acc(predicted, target):
+    ''' Accuracy of classifier '''
+    return predicted == target
+

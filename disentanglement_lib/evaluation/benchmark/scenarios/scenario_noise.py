@@ -30,7 +30,8 @@ import numpy as np
 
 
 class ScenarioNoise(DataHolder):
-  """Dataset where dummy factors are also the observations, with induced noise."""
+  """Author : Jonathan Boilard 2020
+  Dataset where dummy factors are also the observations, with ratio of noise to relationship between code/factors."""
 
   def __init__(self, seed, alpha, num_factors = 2, val_per_factor = 10, K=1):
       self.K = K
@@ -38,45 +39,72 @@ class ScenarioNoise(DataHolder):
       self.val_per_factor = val_per_factor  
       
       self.random_state = np.random.RandomState(seed)
-     
       self.factor_sizes = [val_per_factor]*num_factors
-      features = cartesian([np.array(list(range(i))) for i in self.factor_sizes])
-
-      dataset_features, self.observations, representations = self._load_data(K, features, num_factors, alpha)
       
-      DataHolder.__init__(self, dataset_features, representations)
+     
+      discrete_factors, continuous_factors, representations = self._load_data(K, num_factors, alpha)
+      DataHolder.__init__(self, discrete_factors, continuous_factors, representations)
       
       pass
           
-  def _load_data(self, K, features, num_factors, alpha):
-    #Make artificially generated code 
-    dataset_features = []  
-    observations = []  
-    representations = []
-     
+  def _load_data(self, K, num_factors, alpha):
+    """Author : Jonathan Boilard 2020
+    Creates artificial dataset.
+
+  Args:
+    K: Number of samples for each factor atom
+    num_factors : Number of generative factors
+    alpha : Noise strength ratio
+
+  Returns:
+    discrete_factors : binned factors.
+    continuous_factors : uniformly sampled factor between discrete bin min-max
+    representation : Representation of the relationship with continuous_factors."""
     
-    #Define relationship between factor features (observation) and representation
-    R = np.identity(num_factors)
     
-    for factor_features in features:    
+      
+    #define bin discretization:
+    factor_atoms = cartesian([np.array(list(range(i))) for i in self.factor_sizes])
+    factor_d_bins = []
+    for i, n_val in enumerate(self.factor_sizes):
         
-        #An observation is normalized features between -1 and 1, basically a "ax + b" linear relationship
-        observation = np.zeros((num_factors,))
-        for i, __ in enumerate(factor_features):
-            adjust = (self.factor_sizes[i]-1)/2
-            observation[i] = factor_features[i]/adjust - 1
+        discrete_bins = []
+        discrete_vals = np.array(range(n_val))
+        for d_val in discrete_vals:
+            min_max_bins = [-1 + d_val*(2/n_val), -1 + (d_val+1)*(2/n_val)]
+            discrete_bins.append(min_max_bins)
             
+        factor_d_bins.append(discrete_bins)
+        
+    #Define relationship between factor features (observation) and representation
+    R = np.identity(num_factors)  
+    
+    #Get random binned continuous factor values and get representations
+    continuous_factors = []
+    representations = []
+    discrete_factors = []
+    
+    for discrete_features in factor_atoms:    
+        #Generate a continuous feature from binning possible range.
+        continuous_features = []
+        for i, d_feature in enumerate(discrete_features):
+            rand_continuous = self.random_state.uniform(factor_d_bins[i][d_feature][0], #min
+                                                        factor_d_bins[i][d_feature][1]) #max
+            continuous_features.append(rand_continuous)
+            pass
+        
+ 
         #generate representations which are perfect with noise induction
         for k in range(K):
             noise = self.random_state.uniform(low=-1, high=1, size=num_factors)
-            rep = noise*alpha + np.matmul(observation, R)*(1-alpha)
-            
-            dataset_features.append(factor_features)
-            observations.append(observation)
+            rep = noise*alpha + np.matmul(continuous_features, R)*(1-alpha)
+
             representations.append(rep)
+            continuous_factors.append(continuous_features)
+            discrete_factors.append(discrete_features)
 
             
-    return np.array(dataset_features), np.array(observations), np.array(representations)
+    return np.array(discrete_factors), np.array(continuous_factors), np.array(representations)
       
       
 

@@ -8,15 +8,15 @@ from disentanglement_lib.evaluation.benchmark.sampling import FactorObservationS
 class DataHolder:
     """ @author: jboilard
     For a dataset, Holds all factors and representations, saving time during representation, also allow no replacement sampling of data.""" 
-    def __init__(self, factors, representations):
+    def __init__(self, discrete_factors, continuous_factors, representations):
         
         #get factors and representation
-        self.cont_factors = self.labels = None
-        self.factors = factors
+        self.continuous_factors = continuous_factors
+        self.factors = discrete_factors
         self.embed_codes = representations
         
         #factor and sampling related params
-        self.factors_indices = list(range(factors.shape[-1]))
+        self.factors_indices = list(range(self.factors.shape[-1]))
         self.factor_sizes = np.add(np.max(self.factors, axis=0), 1)
         self.n_factors = len(self.factor_sizes)
         self.sampling = FactorObservationSampling(self.factor_sizes, self.factors_indices, self.factors, list(range(len(self.factors))))
