@@ -1,19 +1,4 @@
-
-from disentanglement_lib.evaluation.benchmark.benchmark import test_metric_dci_L1
-from disentanglement_lib.evaluation.benchmark.benchmark import test_metric_dci_gbt
-from disentanglement_lib.evaluation.benchmark.benchmark import test_metric_bvae
-from disentanglement_lib.evaluation.benchmark.benchmark import test_metric_fvae
-from disentanglement_lib.evaluation.benchmark.benchmark import test_mig
-from disentanglement_lib.evaluation.benchmark.benchmark import test_modex
-from disentanglement_lib.evaluation.benchmark.benchmark import test_sap
-from disentanglement_lib.evaluation.benchmark.benchmark import test_irs
-
-#DOES NOT WORK YET
-from disentanglement_lib.evaluation.benchmark.benchmark import test_fairness
-
-from disentanglement_lib.evaluation.benchmark.benchmark import noise_experiment
 from disentanglement_lib.evaluation.benchmark.benchmark import make_graphs
-
 import pickle
 
 

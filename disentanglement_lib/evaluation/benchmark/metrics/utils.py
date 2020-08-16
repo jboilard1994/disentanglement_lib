@@ -63,7 +63,7 @@ def generate_batch_factor_code(dataholder,
       if continuous == False : 
           factors = np.vstack((factors, current_factors))
       else : 
-          cont_factor = np.take(dataholder.continuous_factors, current_observations_ids)
+          cont_factor = np.take(dataholder.continuous_factors, current_observations_ids, axis=0)
           factors = np.vstack((factors, cont_factor))
       
       rep = np.take(dataholder.embed_codes, current_observations_ids, axis=0)

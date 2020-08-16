@@ -25,10 +25,10 @@ import gin.tf
 
 
 @gin.configurable(
-    "mig",
+    "mig_sup",
     blacklist=["dataholder", "random_state",
                "artifact_dir"])
-def compute_mig(dataholder,
+def compute_mig_sup(dataholder,
                 random_state,
                 artifact_dir=None,
                 num_train=gin.REQUIRED):
@@ -52,10 +52,10 @@ def compute_mig(dataholder,
       dataholder, num_train,
       random_state, num_train)
   assert mus_train.shape[1] == num_train
-  return _compute_mig(mus_train, ys_train)
+  return _compute_mig_sup(mus_train, ys_train)
 
 
-def _compute_mig(mus_train, ys_train):
+def _compute_mig_sup(mus_train, ys_train):
   """Computes score based on both training and testing codes and factors."""
   score_dict = {}
   discretized_mus = utils.make_discretizer(mus_train)
@@ -64,11 +64,11 @@ def _compute_mig(mus_train, ys_train):
   assert m.shape[1] == ys_train.shape[0]
   # m is [num_latents, num_factors]
   entropy = utils.discrete_entropy(ys_train)
-  sorted_m = np.sort(m, axis=0)[::-1]
-  
-  score_dict["MIG_score"] = np.mean(
+  sorted_m = np.sort(m, axis=1)[::-1]
+  score_dict["MIG_sup_score"] = np.mean(
       np.divide(sorted_m[0, :] - sorted_m[1, :], entropy[:]))
-  score_dict["MIG_unnormalized"] = np.mean(sorted_m[0, :] - sorted_m[1, :])
+  score_dict["MIG_sup_unnormalized"] = np.mean(
+      np.divide(sorted_m[0, :] - sorted_m[1, :], entropy[:]))
   return score_dict
 
 

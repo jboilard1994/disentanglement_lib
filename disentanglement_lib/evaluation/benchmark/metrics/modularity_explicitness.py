@@ -68,12 +68,29 @@ def compute_modularity_explicitness(dataholder,
   all_mus = np.transpose(dataholder.embed_codes)
   all_ys = np.transpose(dataholder.factors)
   
+  #New score
   discretized_mus = utils.make_discretizer(all_mus)
   mutual_information = utils.discrete_mutual_info(discretized_mus, all_ys)
   # Mutual information should have shape [num_codes, num_factors].
   assert mutual_information.shape[0] == mus_train.shape[0]
   assert mutual_information.shape[1] == ys_train.shape[0]
   scores["MODEX_modularity_score"] = modularity(mutual_information)
+  
+  #From paper : "for modularity, we report the mean across validation splits and embedding dimensions."
+  # old implementation of disentanglement-lib used train set. 
+  # So we get results for whole dataset, train-set, and test set.
+  
+  #old score 1
+  discretized_mus = utils.make_discretizer(mus_train)
+  mutual_information = utils.discrete_mutual_info(discretized_mus, ys_train)
+  scores["MODEX_modularity_oldtrain_score"] = modularity(mutual_information)
+  
+  #old score 2
+  discretized_mus = utils.make_discretizer(mus_test)
+  mutual_information = utils.discrete_mutual_info(discretized_mus, ys_test)
+  scores["MODEX_modularity_oldtest_score"] = modularity(mutual_information)
+  
+
   explicitness_score_train = np.zeros([ys_train.shape[0], 1])
   explicitness_score_test = np.zeros([ys_test.shape[0], 1])
   mus_train_norm, mean_mus, stddev_mus = utils.normalize_data(mus_train)
@@ -104,7 +121,7 @@ def explicitness_per_factor(mus_train, y_train, mus_test, y_test):
   """
   x_train = np.transpose(mus_train)
   x_test = np.transpose(mus_test)
-  clf = LogisticRegression().fit(x_train, y_train)
+  clf = LogisticRegression(max_iter=500).fit(x_train, y_train)
   y_pred_train = clf.predict_proba(x_train)
   y_pred_test = clf.predict_proba(x_test)
   mlb = MultiLabelBinarizer()

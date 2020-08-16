@@ -39,7 +39,6 @@ def compute_sap(dataholder,
                 artifact_dir=None,
                 num_train=gin.REQUIRED,
                 num_test=gin.REQUIRED,
-                batch_size=16,
                 continuous_factors=gin.REQUIRED):
   """Computes the SAP score.
 
@@ -61,10 +60,10 @@ def compute_sap(dataholder,
   logging.info("Generating training set.")
   mus, ys = utils.generate_batch_factor_code(
       dataholder, num_train,
-      random_state, batch_size, continuous=continuous_factors)
+      random_state, num_train, continuous=continuous_factors)
   mus_test, ys_test = utils.generate_batch_factor_code(
       dataholder, num_test,
-      random_state, batch_size, continuous=continuous_factors)
+      random_state, num_test, continuous=continuous_factors)
   logging.info("Computing score matrix.")
   return _compute_sap(mus, ys, mus_test, ys_test, continuous_factors)
 
