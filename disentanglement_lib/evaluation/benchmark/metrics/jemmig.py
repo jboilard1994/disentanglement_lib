@@ -25,10 +25,10 @@ import gin.tf
 
 
 @gin.configurable(
-    "mig",
+    "jemmig",
     blacklist=["dataholder", "random_state",
                "artifact_dir"])
-def compute_mig(dataholder,
+def compute_jemmig(dataholder,
                 random_state,
                 artifact_dir=None,
                 num_train=gin.REQUIRED):
@@ -52,23 +52,38 @@ def compute_mig(dataholder,
       dataholder, num_train,
       random_state, num_train)
   assert mus_train.shape[1] == num_train
-  return _compute_mig(mus_train, ys_train)
+  return _compute_jemmig(mus_train, ys_train)
 
 
-def _compute_mig(mus_train, ys_train):
+def _compute_jemmig(mus_train, ys_train):
   """Computes score based on both training and testing codes and factors."""
   score_dict = {}
   discretized_mus, bins = utils.make_discretizer(mus_train)
+  n_bins = np.max(discretized_mus) +1
+  
   m = utils.discrete_mutual_info(discretized_mus, ys_train)
+  
   assert m.shape[0] == mus_train.shape[0]
   assert m.shape[1] == ys_train.shape[0]
   # m is [num_latents, num_factors]
-  entropy = utils.discrete_entropy(ys_train)
+  
+  entropy_ys = utils.discrete_entropy(ys_train)
+  entropy_zs = utils.discrete_entropy(discretized_mus)
+  entropy_zs_max = utils.discrete_entropy(np.arange(n_bins, dtype=np.int32).reshape((1,-1)))
   sorted_m = np.sort(m, axis=0)[::-1]
   
-  score_dict["MIG_score"] = np.mean(
-      np.divide(sorted_m[0, :] - sorted_m[1, :], entropy[:]))
-  score_dict["MIG_unnormalized"] = np.mean(sorted_m[0, :] - sorted_m[1, :])
+  unnormalized_results = np.zeros((ys_train.shape[0],))
+  normalized_results = np.zeros((ys_train.shape[0],))
+  for i, yz_mi in enumerate(m.T):
+      argmax_z = np.argmax(yz_mi)
+      joint_entropy = utils.discrete_joint_entropy(discretized_mus[argmax_z,:], ys_train[i,:])
+      unnormalized_results[i] = joint_entropy - sorted_m[0, i] + sorted_m[1, i]
+      normalized_results[i] = (entropy_zs[argmax_z] + entropy_ys[i] - 2*sorted_m[0, i] + sorted_m[1, i])/(entropy_zs_max + entropy_ys[i]) 
+      pass
+  
+  score_dict["JEMMIG_score"] = np.mean(unnormalized_results)
+  score_dict["NORM_JEMMIG_score"] = np.mean(normalized_results)
+  
   return score_dict
 
 

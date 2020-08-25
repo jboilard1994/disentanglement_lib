@@ -61,7 +61,7 @@ def compute_irs(ground_truth_data,
                                              random_state, batch_size)
   assert mus.shape[1] == num_train
 
-  ys_discrete = utils.make_discretizer(ys)
+  ys_discrete, bins = utils.make_discretizer(ys)
   active_mus = _drop_constant_dims(mus)
 
   if not active_mus.any():

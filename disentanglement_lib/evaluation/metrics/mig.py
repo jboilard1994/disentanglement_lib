@@ -60,7 +60,7 @@ def compute_mig(ground_truth_data,
 def _compute_mig(mus_train, ys_train):
   """Computes score based on both training and testing codes and factors."""
   score_dict = {}
-  discretized_mus = utils.make_discretizer(mus_train)
+  discretized_mus, bins = utils.make_discretizer(mus_train)
   m = utils.discrete_mutual_info(discretized_mus, ys_train)
   assert m.shape[0] == mus_train.shape[0]
   assert m.shape[1] == ys_train.shape[0]

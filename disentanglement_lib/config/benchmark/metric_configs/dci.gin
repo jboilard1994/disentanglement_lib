@@ -16,5 +16,6 @@
 
 dci.num_train=1000
 dci.num_test=500
+dataholder.SamplingClass = ""
 # dci.mode="Lasso" 
 #"RF_class", "RF_reg", "LogregL1", "Lasso"

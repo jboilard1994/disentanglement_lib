@@ -24,6 +24,7 @@ from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.linear_model import LogisticRegressionCV
 from sklearn.model_selection import KFold
 import gin.tf
+from scipy import stats
 
 
 def generate_batch_factor_code(dataholder,
@@ -140,13 +141,19 @@ def discrete_mutual_info(mus, ys):
 
 
 def discrete_entropy(ys):
-  """Compute discrete mutual information."""
+  """Compute discrete entropy using mutual information."""
   num_factors = ys.shape[0]
   h = np.zeros(num_factors)
   for j in range(num_factors):
     h[j] = sklearn.metrics.mutual_info_score(ys[j, :], ys[j, :])
   return h
 
+def discrete_joint_entropy(z, y):
+    """ Get joint-entropy of paired one code dimension and one factor's features"""
+    zy_pair = np.vstack((z,y)).T
+    __, inverse = np.unique(zy_pair, axis=0,  return_inverse=True)
+    
+    return sklearn.metrics.mutual_info_score(inverse, inverse)
 
 @gin.configurable(
     "discretizer", blacklist=["target"])
@@ -159,11 +166,12 @@ def make_discretizer(target, num_bins=gin.REQUIRED,
 @gin.configurable("histogram_discretizer", blacklist=["target"])
 def _histogram_discretize(target, num_bins=gin.REQUIRED):
   """Discretization based on histograms."""
-  discretized = np.zeros_like(target)
+  discretized = np.zeros_like(target, dtype=np.int32)
+  bins = []
   for i in range(target.shape[0]):
-    discretized[i, :] = np.digitize(target[i, :], np.histogram(
-        target[i, :], num_bins)[1][:-1])
-  return discretized
+      counts, bins = np.histogram(target[i, :], num_bins)
+      discretized[i, :] = np.digitize(target[i, :], bins[:-1]) - 1
+  return discretized, bins
 
 
 def normalize_data(data, mean=None, stddev=None):
@@ -190,6 +198,14 @@ def logistic_regression_cv():
 def gradient_boosting_classifier():
   """Default gradient boosting classifier."""
   return GradientBoostingClassifier()
+
+def get_middle_bins(bins):
+    mids = np.zeros((len(bins)-1,))
+    for i in range(len(bins)):
+        if i < len(bins)-1:
+            mids[i] = (bins[i] + bins[i+1])/2
+    return mids
+            
 
 def mse(predicted, target):
     ''' mean square error '''

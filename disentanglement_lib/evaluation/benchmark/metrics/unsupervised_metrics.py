@@ -65,7 +65,7 @@ def unsupervised_metrics(ground_truth_data,
       scores["gaussian_wasserstein_correlation"] / np.sum(np.diag(cov_mus)))
 
   # Compute average mutual information between different factors.
-  mus_discrete = utils.make_discretizer(mus_train)
+  mus_discrete, bins = utils.make_discretizer(mus_train)
   mutual_info_matrix = utils.discrete_mutual_info(mus_discrete, mus_discrete)
   np.fill_diagonal(mutual_info_matrix, 0)
   mutual_info_score = np.sum(mutual_info_matrix) / (num_codes**2 - num_codes)

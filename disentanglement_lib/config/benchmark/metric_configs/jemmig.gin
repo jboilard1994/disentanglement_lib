@@ -13,9 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-factor_vae_score.num_train=1000
-factor_vae_score.num_eval=500
-factor_vae_score.batch_size=64
-prune_dims.threshold = 0.05
-dataholder.SamplingClass = "single_factor_fixed"
 
+jemmig.num_train=1000
+discretizer.discretizer_fn = @histogram_discretizer
+discretizer.num_bins = 10
+dataholder.SamplingClass = ""

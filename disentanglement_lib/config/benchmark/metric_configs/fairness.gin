@@ -16,3 +16,4 @@
 fairness.num_train=1000
 fairness.num_test_points_per_class=50
 predictor.predictor_fn = @gradient_boosting_classifier
+dataholder.SamplingClass = ""

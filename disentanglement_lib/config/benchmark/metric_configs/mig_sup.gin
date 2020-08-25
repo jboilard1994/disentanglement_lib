@@ -17,3 +17,4 @@
 mig_sup.num_train=1000
 discretizer.discretizer_fn = @histogram_discretizer
 discretizer.num_bins = 10
+dataholder.SamplingClass = ""

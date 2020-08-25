@@ -25,23 +25,20 @@ import gin.tf
 
 
 @gin.configurable(
-    "mig_sup",
+    "dcimig",
     blacklist=["dataholder", "random_state",
                "artifact_dir"])
-def compute_mig_sup(dataholder,
-                    random_state,
-                    artifact_dir=None,
-                    num_train=gin.REQUIRED):
+def compute_dcimig(dataholder,
+                random_state,
+                artifact_dir=None,
+                num_train=gin.REQUIRED):
     """Computes the mutual information gap.
 
     Args:
-    ground_truth_data: GroundTruthData to be sampled from.
-    representation_function: Function that takes observations as input and
-      outputs a dim_representation sized representation for each observation.
+    dataholder: Holds all factors and associated representations
     random_state: Numpy random state used for randomness.
     artifact_dir: Optional path to directory where artifacts can be saved.
     num_train: Number of points used for training.
-    batch_size: Batch size for sampling.
 
     Returns:
     Dict with average mutual information gap.
@@ -52,32 +49,47 @@ def compute_mig_sup(dataholder,
       dataholder, num_train,
       random_state, num_train)
     assert mus_train.shape[1] == num_train
-    return _compute_mig_sup(mus_train, ys_train)
+    return _compute_dcimig(mus_train, ys_train)
 
 
-def _compute_mig_sup(mus_train, ys_train):
-    """Computes score based on both training and testing codes and factors."""
+def _compute_dcimig(mus_train, ys_train):
+    """Computes score."""
     score_dict = {}
     discretized_mus, bins = utils.make_discretizer(mus_train)
     m = utils.discrete_mutual_info(discretized_mus, ys_train)
-
-    # m is [num_latents, num_factors]
     assert m.shape[0] == mus_train.shape[0]
     assert m.shape[1] == ys_train.shape[0]
 
-    # Find top two factor MI for each code, get individual disentanglement scores
+    # For score normalization
     entropy = utils.discrete_entropy(ys_train)
-    dis = np.zeros((m.shape[0],))
-    norm_dis = np.zeros((m.shape[0],))
+
+    # Find top two factor MI for each code, get disentanglement scores and save ids
+    Dis = np.zeros((m.shape[0],))
+    jis = []
     for i, code_MI in enumerate(m):
         idx = (-code_MI).argsort()[:2]
         j_i, j_k = idx[0], idx[1]
-        dis[i] = code_MI[j_i] - code_MI[j_k]
-        norm_dis[i] = code_MI[j_i]/(entropy[j_i]) - code_MI[j_k]/(entropy[j_k])
+        jis.append(j_i)
+        Dis[i] = code_MI[j_i] - code_MI[j_k]
         pass
 
-    score_dict["MIG_sup_score"] = np.mean(norm_dis)
-    score_dict["MIG_sup_unnormalized"] = np.mean(dis)
-    return score_dict
+    Djz = []
+    # For each factor, find the code which disentangles it the most.
+    for j, factor_MI in enumerate(m.T):
+        II_j = []
+        for i in range(m.shape[0]):
+            if jis[i] == j:
+              II_j.append(i)
 
+        if len(II_j) > 0:
+            max_i = np.argmax(Dis[II_j])
+            k_j= II_j[max_i]
+            Djz.append(Dis[k_j])
+        else:
+            Djz.append(0)
+
+    score_dict["DCIMIG_unnormalized"] = np.mean(Djz)
+    score_dict["DCIMIG_normalized"] = np.mean(np.divide(Djz, entropy))
+
+    return score_dict
 

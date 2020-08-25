@@ -3,12 +3,15 @@ import pandas as pd
 import numpy as np
 import os
 
-from disentanglement_lib.evaluation.benchmark.sampling import FactorObservationSampling
+from disentanglement_lib.evaluation.benchmark.sampling.sampling_factor_fixed import SingleFactorFixedSampling
+from disentanglement_lib.evaluation.benchmark.sampling.sampling_factor_varied import SingleFactorVariedSampling
+from disentanglement_lib.evaluation.benchmark.sampling.generic_sampling import GenericSampling
 
+@gin.configurable("dataholder")
 class DataHolder:
     """ @author: jboilard
     For a dataset, Holds all factors and representations, saving time during representation, also allow no replacement sampling of data.""" 
-    def __init__(self, discrete_factors, continuous_factors, representations):
+    def __init__(self, discrete_factors, continuous_factors, representations, SamplingClass=gin.REQUIRED):
         
         #get factors and representation
         self.continuous_factors = continuous_factors
@@ -19,8 +22,14 @@ class DataHolder:
         self.factors_indices = list(range(self.factors.shape[-1]))
         self.factor_sizes = np.add(np.max(self.factors, axis=0), 1)
         self.n_factors = len(self.factor_sizes)
-        self.sampling = FactorObservationSampling(self.factor_sizes, self.factors_indices, self.factors, list(range(len(self.factors))))
         
+        if SamplingClass == "single_factor_fixed":
+            self.sampling = SingleFactorFixedSampling(self.factor_sizes, self.factors_indices, self.factors, list(range(len(self.factors))))
+        elif SamplingClass == "single_factor_varied":
+            self.sampling = SingleFactorVariedSampling(self.factor_sizes, self.factors_indices, self.factors, list(range(len(self.factors))))
+        else:
+            self.sampling = GenericSampling(self.factor_sizes, self.factors_indices, self.factors, list(range(len(self.factors))))
+   
     @property
     def num_factors(self):
         """ @author: jboilard
@@ -30,7 +39,7 @@ class DataHolder:
     @property
     def factors_num_values(self):
         return self.factor_sizes
-    
+
     
     def __len__(self):
         """ @author: jboilard
@@ -73,6 +82,18 @@ class DataHolder:
         lock_list = np.array(presampled_factors)
         lock_list[:,:lock_id] = -1
         lock_list[:,lock_id+1:] = -1
+        
+        factors, observation_ids = self.sampling.sample_latent_factors(len(presampled_factors), random_state, lock_list)
+        return factors, observation_ids
+    
+    def sample_with_single_varied_factors(self, random_state, vary_id, presampled_factors):
+        """ @author: jboilard 
+        Used in certain metrics where samples with same values are sampled.
+        random_state : random seed
+        lock_id : index where sampled factors muts have same value
+        presampled_factors : factors sampled with "sample_factors_with_locking_possibilities()", one factor is sampled per element in this list, and must have the same value at lock_index than the sampled factor """
+        lock_list = np.array(presampled_factors)
+        lock_list[:,vary_id] = -1
         
         factors, observation_ids = self.sampling.sample_latent_factors(len(presampled_factors), random_state, lock_list)
         return factors, observation_ids

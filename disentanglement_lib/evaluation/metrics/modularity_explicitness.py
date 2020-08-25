@@ -65,7 +65,7 @@ def compute_modularity_explicitness(ground_truth_data,
   mus_test, ys_test = utils.generate_batch_factor_code(
       ground_truth_data, representation_function, num_test,
       random_state, batch_size)
-  discretized_mus = utils.make_discretizer(mus_train)
+  discretized_mus, bins = utils.make_discretizer(mus_train)
   mutual_information = utils.discrete_mutual_info(discretized_mus, ys_train)
   # Mutual information should have shape [num_codes, num_factors].
   assert mutual_information.shape[0] == mus_train.shape[0]

@@ -17,3 +17,4 @@
 beta_vae_sklearn.batch_size=8
 beta_vae_sklearn.num_train=100
 beta_vae_sklearn.num_eval=100
+dataholder.SamplingClass = "single_factor_fixed"

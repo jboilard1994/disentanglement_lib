@@ -65,7 +65,7 @@ def compute_dci(dataholder,
   del artifact_dir
   logging.info("Generating training set.")
   
-  if mode == "RF_class" or mode == "LogregL1":
+  if mode == "RF_class" or mode == "LogRegL1":
       continuous = False
        
   if mode == "RF_reg" or mode == "Lasso":
@@ -84,8 +84,8 @@ def compute_dci(dataholder,
       random_state, num_test, continuous=continuous)
   
   mus_eval, ys_eval = utils.generate_batch_factor_code(
-      dataholder, num_test,
-      random_state, num_test, continuous=continuous)
+      dataholder, num_eval,
+      random_state, num_eval, continuous=continuous)
   
   scores = _compute_dci(mus_train, ys_train, mus_test, ys_test, mus_eval, ys_eval, mode)
   return scores
@@ -114,7 +114,7 @@ def _compute_dci(mus_train, ys_train, mus_test, ys_test, mus_eval, ys_eval, mode
       importances_fn = np.abs
       hyperparam_select_fn = np.argmin
      
-  if mode == "LogregL1":
+  if mode == "LogRegL1":
       Cs = np.abs(np.arange(0.005, 0.15, 0.005) - 1)
       params = [{"C": C, "max_iter":200} for C in Cs]
       
