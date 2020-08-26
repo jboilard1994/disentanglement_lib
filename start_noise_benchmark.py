@@ -20,8 +20,8 @@ from disentanglement_lib.config.benchmark.scenarios.noise_bindings import config
 from disentanglement_lib.config.benchmark.scenarios.noise_bindings import config_modex
 from disentanglement_lib.config.benchmark.scenarios.noise_bindings import config_wdg
 
-from disentanglement_lib.evaluation.benchmark.benchmark import noise_scenario_main
-from disentanglement_lib.evaluation.benchmark.scenarios.scenario_noise import NoiseMode
+from disentanglement_lib.evaluation.benchmark.noise_benchmark import noise_scenario_main
+from disentanglement_lib.evaluation.benchmark.scenarios.noise_dataholder import NoiseMode
 from disentanglement_lib.evaluation.benchmark.benchmark_utils import make_graphs
 
 import pickle
@@ -52,8 +52,8 @@ noise_modes = [NoiseMode.FAV_CONTINUOUS,
                NoiseMode.FAV_DISCRETE_ADD_NOISE,
                NoiseMode.FAV_DISCRETE_ADD_NOISE_EXTRA_Z]
 
-#noise_modes = [NoiseMode.FAV_CONTINUOUS_EXTRA_Z]
-#config_funcs = [config_mig_sup]
+noise_modes = [NoiseMode.FAV_CONTINUOUS_EXTRA_Z]
+config_funcs = [config_mig_sup, config_sap_discrete]
 
 
 if __name__ == "__main__": 
@@ -76,7 +76,11 @@ if __name__ == "__main__":
             all_results[id_] = results_dict
 
             if process_mode == "mp":
-                pickle.dump([noise_mode, all_results], open("./pickled_results/{}.p".format(str(noise_mode)), "wb"))
+               # pickle.dump([noise_mode, all_results], open("./pickled_results/{}.p".format(str(noise_mode)), "wb"))
                 pass
 
-        make_graphs(all_results, num_factors, val_per_factor, noise_mode=noise_mode)
+        #make_graphs(all_results, num_factors, val_per_factor, noise_mode=noise_mode)
+
+
+
+
