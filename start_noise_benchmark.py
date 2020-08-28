@@ -1,47 +1,47 @@
 import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
-from disentanglement_lib.config.benchmark.scenarios.noise_bindings import config_dci_RF_class
-from disentanglement_lib.config.benchmark.scenarios.noise_bindings import config_dci_RF_reg
-from disentanglement_lib.config.benchmark.scenarios.noise_bindings import config_dci_LogRegL1
-from disentanglement_lib.config.benchmark.scenarios.noise_bindings import config_dci_Lasso
-from disentanglement_lib.config.benchmark.scenarios.noise_bindings import config_sap_discrete
-from disentanglement_lib.config.benchmark.scenarios.noise_bindings import config_sap_continuous
+from disentanglement_lib.config.benchmark.scenarios.noise_bindings import ConfigDCIRFClass
+from disentanglement_lib.config.benchmark.scenarios.noise_bindings import ConfigDCIRFReg
+from disentanglement_lib.config.benchmark.scenarios.noise_bindings import ConfigDCILogRegL1
+from disentanglement_lib.config.benchmark.scenarios.noise_bindings import ConfigDCILasso
+from disentanglement_lib.config.benchmark.scenarios.noise_bindings import ConfigSAPDiscrete
+from disentanglement_lib.config.benchmark.scenarios.noise_bindings import ConfigSAPContinuous
 
-from disentanglement_lib.config.benchmark.scenarios.noise_bindings import config_bvae
-from disentanglement_lib.config.benchmark.scenarios.noise_bindings import config_fvae
-from disentanglement_lib.config.benchmark.scenarios.noise_bindings import config_rfvae
-from disentanglement_lib.config.benchmark.scenarios.noise_bindings import config_irs
+from disentanglement_lib.config.benchmark.scenarios.noise_bindings import ConfigBVAE
+from disentanglement_lib.config.benchmark.scenarios.noise_bindings import ConfigFVAE
+from disentanglement_lib.config.benchmark.scenarios.noise_bindings import ConfigRFVAE
+from disentanglement_lib.config.benchmark.scenarios.noise_bindings import ConfigIRS
 
-from disentanglement_lib.config.benchmark.scenarios.noise_bindings import config_mig
-from disentanglement_lib.config.benchmark.scenarios.noise_bindings import config_dcimig
-from disentanglement_lib.config.benchmark.scenarios.noise_bindings import config_mig_sup
-from disentanglement_lib.config.benchmark.scenarios.noise_bindings import config_jemmig
-from disentanglement_lib.config.benchmark.scenarios.noise_bindings import config_modex
-from disentanglement_lib.config.benchmark.scenarios.noise_bindings import config_wdg
+from disentanglement_lib.config.benchmark.scenarios.noise_bindings import ConfigMIG
+from disentanglement_lib.config.benchmark.scenarios.noise_bindings import ConfigDCIMIG
+from disentanglement_lib.config.benchmark.scenarios.noise_bindings import ConfigMIGSUP
+from disentanglement_lib.config.benchmark.scenarios.noise_bindings import ConfigJEMMIG
+from disentanglement_lib.config.benchmark.scenarios.noise_bindings import ConfigModex
+from disentanglement_lib.config.benchmark.scenarios.noise_bindings import ConfigWDG
 
 from disentanglement_lib.evaluation.benchmark.noise_benchmark import noise_scenario_main
 from disentanglement_lib.evaluation.benchmark.scenarios.noise_dataholder import NoiseMode
-from disentanglement_lib.evaluation.benchmark.benchmark_utils import make_graphs
+from disentanglement_lib.evaluation.benchmark.graphing.noise_graphing import make_graphs
 
 import pickle
 
-config_funcs = [config_dci_RF_class, 
-                config_dci_RF_reg, 
-                config_dci_LogRegL1,
-                config_dci_Lasso,
-                config_bvae, 
-                config_fvae, 
-                config_rfvae,
-                config_irs,
-                config_mig, 
-                config_wdg,
-                config_dcimig,
-                config_mig_sup,
-                config_jemmig,
-                config_modex,
-                config_sap_discrete,
-                config_sap_continuous]
+config_funcs = [ConfigIRS,
+                ConfigSAPDiscrete,
+                ConfigSAPContinuous,
+                ConfigModex,
+                ConfigRFVAE,
+                ConfigFVAE,
+                ConfigBVAE,
+                ConfigDCIRFClass,
+                ConfigDCIRFReg,
+                ConfigDCILogRegL1,
+                ConfigDCILasso,
+                ConfigDCIMIG,
+                ConfigMIG,
+                ConfigWDG,
+                ConfigJEMMIG,
+                ConfigMIGSUP]
 
 noise_modes = [NoiseMode.FAV_CONTINUOUS,
                NoiseMode.FAV_CONTINUOUS_EXTRA_Z,
@@ -52,15 +52,15 @@ noise_modes = [NoiseMode.FAV_CONTINUOUS,
                NoiseMode.FAV_DISCRETE_ADD_NOISE,
                NoiseMode.FAV_DISCRETE_ADD_NOISE_EXTRA_Z]
 
-noise_modes = [NoiseMode.FAV_CONTINUOUS_EXTRA_Z]
-config_funcs = [config_mig_sup, config_sap_discrete]
+noise_modes = [NoiseMode.FAV_CONTINUOUS,
+               NoiseMode.FAV_CONTINUOUS_EXTRA_Z]
 
 
 if __name__ == "__main__": 
     process_mode = "mp"  # debug or mp
     num_factors = 3
     val_per_factor = 10 
-    n_seeds = 10
+    n_seeds = 2
 
     for noise_mode in noise_modes:
         all_results = {}
@@ -76,10 +76,10 @@ if __name__ == "__main__":
             all_results[id_] = results_dict
 
             if process_mode == "mp":
-               # pickle.dump([noise_mode, all_results], open("./pickled_results/{}.p".format(str(noise_mode)), "wb"))
+                #pickle.dump([noise_mode, all_results], open("./pickled_results/{}.p".format(str(noise_mode)), "wb"))
                 pass
 
-        #make_graphs(all_results, num_factors, val_per_factor, noise_mode=noise_mode)
+        make_graphs(all_results, num_factors, val_per_factor, noise_mode=noise_mode)
 
 
 

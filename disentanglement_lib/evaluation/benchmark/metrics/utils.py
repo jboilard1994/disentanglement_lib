@@ -165,13 +165,14 @@ def make_discretizer(target, num_bins=gin.REQUIRED,
 
 @gin.configurable("histogram_discretizer", blacklist=["target"])
 def _histogram_discretize(target, num_bins=gin.REQUIRED):
-  """Discretization based on histograms."""
-  discretized = np.zeros_like(target, dtype=np.int32)
-  bins = []
-  for i in range(target.shape[0]):
-      counts, bins = np.histogram(target[i, :], num_bins)
-      discretized[i, :] = np.digitize(target[i, :], bins[:-1]) - 1
-  return discretized, bins
+    """Discretization based on histograms."""
+    discretized = np.zeros_like(target, dtype=np.int32)
+    all_bins = []
+    for i in range(target.shape[0]):
+        counts, bins = np.histogram(target[i, :], num_bins)
+        discretized[i, :] = np.digitize(target[i, :], bins[:-1]) - 1
+        all_bins.append(bins)
+    return discretized, all_bins
 
 
 def normalize_data(data, mean=None, stddev=None):
@@ -199,12 +200,15 @@ def gradient_boosting_classifier():
   """Default gradient boosting classifier."""
   return GradientBoostingClassifier()
 
-def get_middle_bins(bins):
-    mids = np.zeros((len(bins)-1,))
-    for i in range(len(bins)):
-        if i < len(bins)-1:
-            mids[i] = (bins[i] + bins[i+1])/2
-    return mids
+def get_middle_bins(all_bins):
+    all_mids = []
+    for bins in all_bins:
+        mids = np.zeros((len(bins)-1,))
+        for i in range(len(bins)):
+            if i < len(bins)-1:
+                mids[i] = (bins[i] + bins[i+1])/2
+        all_mids.append(mids)
+    return all_mids
             
 
 def mse(predicted, target):

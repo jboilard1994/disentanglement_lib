@@ -119,7 +119,7 @@ def compute_score_matrix(mus, ys, mus_test, ys_test, continuous_factors):
         y_j = ys[j, :]  
         mu_i_test = mus_test[i, :]
         y_j_test = ys_test[j, :]
-        classifier = LogisticRegression(penalty='none', max_iter=500)
+        classifier = LogisticRegression(penalty='none', max_iter=10000)
         classifier.fit(mu_i[:, np.newaxis], y_j)
         
         pred = classifier.predict(mu_i_test[:, np.newaxis])

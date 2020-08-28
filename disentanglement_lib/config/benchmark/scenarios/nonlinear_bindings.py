@@ -52,7 +52,7 @@ from disentanglement_lib.config.benchmark.scenarios.bindings import GenericConfi
 class ConfigIRS(GenericConfigIRS):
     def __init__(self):
         pass
-    
+
 
 class ConfigSAPDiscrete(GenericConfigSAPDiscrete):
     def __init__(self):
@@ -68,51 +68,20 @@ class ConfigModex(GenericConfigModex):
     def __init__(self):
         pass
 
-  
 
 class ConfigRFVAE(GenericConfigRFVAE):
     def __init__(self):
         pass
-    
-    @staticmethod
-    def get_extra_params():
-        batch_size = 8
-        num_train_evals = [50, 300, 500]
-        extra_params = [[batch_size], num_train_evals]
-        param_ids = []
-        for num_train_eval in num_train_evals:
-            param_ids.append([batch_size, num_train_eval])
-        return param_ids, extra_params
-    
+
 
 class ConfigFVAE(GenericConfigFVAE):
     def __init__(self):
         pass
-    
-    @staticmethod
-    def get_extra_params():
-        batch_size = 16
-        num_train_evals = [50, 300, 500]
-        extra_params = [[batch_size], num_train_evals]
-        param_ids = []
-        for num_train_eval in num_train_evals:
-            param_ids.append([batch_size, num_train_eval])
-        return param_ids, extra_params
 
 
 class ConfigBVAE(GenericConfigBVAE):
     def __init__(self):
         pass
-    
-    @staticmethod
-    def get_extra_params():
-        batch_size = 16
-        num_train_evals = [50, 300, 500]
-        extra_params = [[batch_size], num_train_evals]
-        param_ids = []
-        for num_train_eval in num_train_evals:
-            param_ids.append([batch_size, num_train_eval])
-        return param_ids, extra_params
 
 
 class ConfigDCIRFClass(GenericConfigDCIRFClass):
@@ -123,8 +92,8 @@ class ConfigDCIRFClass(GenericConfigDCIRFClass):
 class ConfigDCIRFReg(GenericConfigDCIRFReg):
     def __init__(self):
         pass
-    
-    
+
+
 class ConfigDCILogRegL1(GenericConfigDCILogRegL1):
     def __init__(self):
         pass
@@ -153,8 +122,8 @@ class ConfigWDG(GenericConfigWDG):
 class ConfigJEMMIG(GenericConfigJEMMIG):
     def __init__(self):
         pass
-    
-    
+
+
 class ConfigMIGSUP(GenericConfigMIGSUP):
     def __init__(self):
         pass

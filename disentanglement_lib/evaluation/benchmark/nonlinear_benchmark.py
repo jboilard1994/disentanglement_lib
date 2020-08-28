@@ -38,21 +38,19 @@ from disentanglement_lib.evaluation.benchmark.sampling.sampling_factor_fixed imp
 from disentanglement_lib.evaluation.benchmark.sampling.sampling_factor_varied import SingleFactorVariedSampling
 from disentanglement_lib.evaluation.benchmark.sampling.generic_sampling import GenericSampling
 
-from disentanglement_lib.evaluation.benchmark.scenarios import noise_dataholder
+from disentanglement_lib.evaluation.benchmark.scenarios import nonlinear_dataholder
 from disentanglement_lib.evaluation.benchmark.benchmark_utils import manage_processes, init_dict, add_to_dict
 from disentanglement_lib.config.benchmark.scenarios.bindings import Metrics
-from disentanglement_lib.evaluation.benchmark.scenarios.noise_dataholder import NoiseMode
+from disentanglement_lib.evaluation.benchmark.scenarios.nonlinear_dataholder import NonlinearMode
 
 
-def test_metric(config_fn, num_factors, val_per_factor, index_dict, queue, noise_mode):
+def test_metric(config_fn, num_factors, val_per_factor, index_dict, queue, non_linear_mode):
     # Get run parameters
-    K = index_dict["K"]
-    alpha = index_dict["alpha"]
     seed = index_dict["seed"]
     f = index_dict["f"]
     
     # get params
-    n_samples = noise_dataholder.NoiseDataHolder.get_expected_len(num_factors, val_per_factor, K)
+    n_samples = nonlinear_dataholder.NonlinearDataHolder.get_expected_len(num_factors, val_per_factor, 1)
     metric_fn = config_fn.get_metric_fn_id()[0]
 
     configs = config_fn.get_gin_configs(n_samples, val_per_factor)
@@ -64,19 +62,11 @@ def test_metric(config_fn, num_factors, val_per_factor, index_dict, queue, noise
         extra_param_id = param_ids[i]
         # apply configs
         gin.parse_config_files_and_bindings(gin_config_files, gin_bindings)
-        
-        # Make dataset to run metrics on
-        if noise_mode == NoiseMode.FAV_CONTINUOUS_SEEDED_DATASET or noise_mode == NoiseMode.FAV_DISCRETE_SEEDED_DATASET:
-            s = seed
-        else:
-            s = 0
 
-        dataholder = noise_dataholder.NoiseDataHolder(alpha=alpha,
-                                                  seed=s,
-                                                  K=K,
-                                                  num_factors=num_factors,
-                                                  val_per_factor=val_per_factor,
-                                                  noise_mode=noise_mode)
+        dataholder = nonlinear_dataholder.NonlinearDataHolder(seed=seed,
+                                                              non_linear_mode=non_linear_mode,
+                                                              num_factors=num_factors,
+                                                              val_per_factor=val_per_factor)
         # set random states & go!
         np.random.seed(seed)
         random_state = np.random.RandomState(seed)
@@ -87,7 +77,7 @@ def test_metric(config_fn, num_factors, val_per_factor, index_dict, queue, noise
         
         gin.clear_config()
         
-    return_dict = {"K": K, "alpha": alpha, "seed": seed, "f": f, "result": results}
+    return_dict = {"seed": seed, "f": f, "result": results}
     queue.put(return_dict)  # Multiprocessing accessible list.
     
     return return_dict
@@ -98,108 +88,82 @@ def organize_results(result_dicts_list, metric_id):
     with final index being the metric name/list of seeded results"""
 
     # Find all unique values
-    Ks = []
-    alphas = []
+
     seeds = []
     for result_dict in result_dicts_list:
-        Ks.append(result_dict["K"])
-        alphas.append(result_dict["alpha"])
         seeds.append(result_dict["seed"])
 
     # Isolate all values
-    Ks = np.unique(Ks)
-    alphas = np.unique(alphas)
     seeds = np.unique(seeds)
 
     # initialize organized_results
     organized_results = {}
-    for K in Ks:
-        organized_results[K] = {}
-        for alpha in alphas:
-            organized_results[K][alpha] = {}
 
     # Fill organized dict!
     for result_dict in result_dicts_list:
         f = result_dict['f']
-        K = result_dict['K']
-        alpha = result_dict['alpha']
         fn_result_dict = result_dict["result"]
 
         # Bvae and FVAE have common extra parameters to evaluate.
         if metric_id == Metrics.BVAE or metric_id == Metrics.FVAE or metric_id == Metrics.RFVAE:
             # if a dict entry does not exist yet.
-            if organized_results[K][alpha] == {}:
+            if organized_results == {}:
                 for batch_size, num_eval_dict in fn_result_dict.items():
-                    organized_results[K][alpha][batch_size] = {}
+                    organized_results[batch_size] = {}
 
                     for num_eval, scores_dict in num_eval_dict.items():
-                        organized_results[K][alpha][batch_size][num_eval] = {}
+                        organized_results[batch_size][num_eval] = {}
 
                         for score_name, __ in scores_dict.items():
-                            organized_results[K][alpha][batch_size][num_eval][score_name] = []
+                            organized_results[batch_size][num_eval][score_name] = []
 
             # Fill in the organized dict. append seeded results
             for batch_size, num_eval_dict in fn_result_dict.items():
                 for num_eval, scores_dict in num_eval_dict.items():
                     for score_name, score in scores_dict.items():
-                        organized_results[K][alpha][batch_size][num_eval][score_name].append(score)
+                        organized_results[batch_size][num_eval][score_name].append(score)
 
         # All other metric organize their dictionnary here.
         else:
             # if a dict entry does not exist yet.
-            if organized_results[K][alpha] == {}:
-                for key, __ in fn_result_dict.items():
-                    organized_results[K][alpha][key] = []
+            if organized_results == {}:
+                for metric_name, __ in fn_result_dict.items():
+                    organized_results[metric_name] = []
 
             # F ill in the organized dict. append seeded results
             for metric_name, value in fn_result_dict.items():
-                organized_results[K][alpha][metric_name].append(value)
+                organized_results[metric_name].append(value)
 
     return organized_results
 
 
-def noise_scenario_main(config_fn, num_factors, val_per_factor, noise_mode, nseeds=50, process_mode="debug"):
+def non_linear_scenario_main(config_fn, num_factors, val_per_factor, nonlinear_mode, nseeds=50, process_mode="debug"):
     # define scenario parameter alpha
-    alphas = np.arange(0, 1.01, 0.2)
-    alphas = [float("{:.2f}".format(a)) for a in alphas]
-    
+
     processes = []
     result_dicts_list = []
     q = mp.Queue()
-     
-    for K in [1, 8]:
-        for alpha in alphas: # set noise strength
-            
-            for seed in range(nseeds):
-                index_dict = {'K': K, 'alpha': alpha, 'seed': seed, 'f': str(config_fn.get_metric_fn_id()[0])}
+
+    for seed in range(nseeds):
+        index_dict = {'seed': seed, 'f': str(config_fn.get_metric_fn_id()[0])}
+
+        if process_mode == "debug": # allows breakpoint debug.
+            result_dicts_list.append(test_metric(config_fn, num_factors, val_per_factor, index_dict, q, nonlinear_mode))
+            print(result_dicts_list[-1])
+
+        elif process_mode == "mp":
+            process = mp.Process(target=test_metric,
+                                 args=(config_fn,
+                                       num_factors,
+                                       val_per_factor,
+                                       index_dict,
+                                       q,
+                                       nonlinear_mode),
+                                 name="Noise1_seed = {}, fn={}".format(seed, str(config_fn)))
+
+            processes.append(process)
                 
-                if process_mode == "debug": # allows breakpoint debug.
-                    result_dicts_list.append(test_metric(config_fn, num_factors, val_per_factor, index_dict, q, noise_mode))
-                    print(result_dicts_list[-1])
-                    
-                elif process_mode == "mp": 
-                    process = mp.Process(target=test_metric,
-                                         args=(config_fn,
-                                               num_factors,
-                                               val_per_factor,
-                                               index_dict,
-                                               q,
-                                               noise_mode),
-                                         name="Noise1_K={}, alpha={}, seed = {}, fn={}".format(K, alpha, seed, str(config_fn)))
-                    
-                    processes.append(process)
-                
-    if process_mode == "mp": 
+    if process_mode == "mp":
         result_dicts_list = manage_processes(processes, q)
     
     return organize_results(result_dicts_list, config_fn.get_metric_fn_id()[1])
-
-
-
-          
-                   
-
-
-  
-  
-  

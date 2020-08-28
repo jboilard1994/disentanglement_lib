@@ -116,10 +116,10 @@ def _compute_dci(mus_train, ys_train, mus_test, ys_test, mus_eval, ys_eval, mode
      
   if mode == "LogRegL1":
       Cs = np.abs(np.arange(0.005, 0.15, 0.005) - 1)
-      params = [{"C": C, "max_iter":200} for C in Cs]
+      params = [{"C": C, "max_iter": 10e5} for C in Cs]
       
       #Add no alpha penalty version for perfect data
-      params.append({'penalty':'none', 'max_iter':200}) 
+      params.append({'penalty':'none', 'max_iter': 10e5})
       models=[LogisticRegression]*(len(params))
       
       err_fn = utils.acc
@@ -128,7 +128,7 @@ def _compute_dci(mus_train, ys_train, mus_test, ys_test, mus_eval, ys_eval, mode
       hyperparam_select_fn = np.argmax 
       
   if mode == "Lasso":
-      params = [{"alpha": alpha, "max_iter":200} for alpha in np.arange(0.005, 0.15, 0.005)]
+      params = [{"alpha": alpha, "max_iter": 10e5} for alpha in np.arange(0.005, 0.15, 0.005)]
       models = [Lasso]*len(params)
       
       #Add no alpha penalty version for perfect data
