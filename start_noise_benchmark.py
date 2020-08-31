@@ -45,22 +45,23 @@ config_funcs = [ConfigIRS,
 
 noise_modes = [NoiseMode.FAV_CONTINUOUS,
                NoiseMode.FAV_CONTINUOUS_EXTRA_Z,
-               NoiseMode.FAV_CONTINUOUS_SEEDED_DATASET,
+               NoiseMode.FAV_CONTINUOUS_ADD_NOISE,
+               NoiseMode.FAV_CONTINUOUS_ADD_NOISE_EXTRA_Z,
                NoiseMode.FAV_DISCRETE,
                NoiseMode.FAV_DISCRETE_EXTRA_Z,
-               NoiseMode.FAV_DISCRETE_SEEDED_DATASET,
                NoiseMode.FAV_DISCRETE_ADD_NOISE,
                NoiseMode.FAV_DISCRETE_ADD_NOISE_EXTRA_Z]
 
-noise_modes = [NoiseMode.FAV_CONTINUOUS,
-               NoiseMode.FAV_CONTINUOUS_EXTRA_Z]
-
+noise_modes = [NoiseMode.FAV_CONTINUOUS_ADD_NOISE,
+               NoiseMode.FAV_CONTINUOUS_ADD_NOISE_EXTRA_Z,
+               NoiseMode.FAV_DISCRETE_ADD_NOISE,
+               NoiseMode.FAV_DISCRETE_ADD_NOISE_EXTRA_Z]
 
 if __name__ == "__main__": 
     process_mode = "mp"  # debug or mp
     num_factors = 3
     val_per_factor = 10 
-    n_seeds = 2
+    n_seeds = 10
 
     for noise_mode in noise_modes:
         all_results = {}
@@ -75,9 +76,7 @@ if __name__ == "__main__":
             id_ = f.get_metric_fn_id()[1]
             all_results[id_] = results_dict
 
-            if process_mode == "mp":
-                #pickle.dump([noise_mode, all_results], open("./pickled_results/{}.p".format(str(noise_mode)), "wb"))
-                pass
+            pickle.dump([noise_mode, all_results], open("./pickled_results/{}/{}.p".format(process_mode, str(noise_mode)), "wb"))
 
         make_graphs(all_results, num_factors, val_per_factor, noise_mode=noise_mode)
 

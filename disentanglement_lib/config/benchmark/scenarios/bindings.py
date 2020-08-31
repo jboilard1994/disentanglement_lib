@@ -49,8 +49,7 @@ class Metrics(Enum):
 
 
 class GenericConfigIRS:
-    @staticmethod
-    def get_gin_configs(n_samples, val_per_factor): 
+    def get_gin_configs(self, n_samples, val_per_factor):
         """ Get IRS configs, See Generic function description on top of file for more details"""
         gin_config_files = ["./disentanglement_lib/config/benchmark/metric_configs/irs.gin"]
         gin_bindings = ["irs.num_train = {}".format(n_samples),
@@ -59,42 +58,43 @@ class GenericConfigIRS:
                         "discretizer.num_bins = {}".format(val_per_factor)]
         return [[gin_config_files, gin_bindings]]
 
+
+    def get_extra_params(self):
+        return [[]], []
+
     @staticmethod
     def get_metric_fn_id(): 
         return irs.compute_irs, Metrics.IRS
-    
-    @staticmethod
-    def get_extra_params(): 
-        return [[]], []
+
+
     
 
 class GenericConfigSAPDiscrete:
-    @staticmethod
-    def get_gin_configs(n_samples, val_per_factor):
+    def get_gin_configs(self, n_samples, val_per_factor):
         return get_sap_configs(n_samples, val_per_factor, False)
-    
+
+    def get_extra_params(self):
+        return [[]], []
+
     @staticmethod
     def get_metric_fn_id(): 
         return sap_score.compute_sap, Metrics.SAP_DISCRETE
     
-    @staticmethod
-    def get_extra_params(): 
-        return [[]], []
+
     
     
 class GenericConfigSAPContinuous:
-    @staticmethod
-    def get_gin_configs(n_samples, val_per_factor):
+    def get_gin_configs(self, n_samples, val_per_factor):
         return get_sap_configs(n_samples, val_per_factor, True)
+
+
+    def get_extra_params(self):
+        return [[]], []
 
     @staticmethod
     def get_metric_fn_id(): 
         return sap_score.compute_sap, Metrics.SAP_CONTINUOUS
     
-    @staticmethod
-    def get_extra_params(): 
-        return [[]], []
-
 
 def get_sap_configs(n_samples, val_per_factor, continuous): 
     """ Get SAP configs, See Generic function description on top of file for more details
@@ -107,8 +107,7 @@ def get_sap_configs(n_samples, val_per_factor, continuous):
 
 
 class GenericConfigModex:
-    @staticmethod
-    def get_gin_configs(n_samples, val_per_factor):
+    def get_gin_configs(self, n_samples, val_per_factor):
         """ Get MODEX configs, See Generic function description on top of file for more details"""
         gin_config_files = ["./disentanglement_lib/config/benchmark/metric_configs/modularity_explicitness.gin"]
         gin_bindings = ["modularity_explicitness.num_train = {}".format(int(n_samples*0.8)),
@@ -117,24 +116,25 @@ class GenericConfigModex:
                         "discretizer.num_bins = {}".format(val_per_factor)]
         return [[gin_config_files, gin_bindings]]
 
+
+    def get_extra_params(self):
+        return [[]], []
+
     @staticmethod
     def get_metric_fn_id(): 
         return modularity_explicitness.compute_modularity_explicitness, Metrics.MODEX
     
-    @staticmethod
-    def get_extra_params(): 
-        return [[]], []
+
 
 
 class GenericConfigRFVAE:
-    @staticmethod
-    def get_gin_configs(n_samples, val_per_factor):
+    def get_gin_configs(self, n_samples, val_per_factor):
         """ Get FVAE configs, See Generic function description on top of file for more details
         Extra output params are 1) batch_size 2) num_train_evals """
         gin_config_files = ["./disentanglement_lib/config/benchmark/metric_configs/rf_vae_metric.gin"]
 
         configs = []
-        params_ids, __ = GenericConfigRFVAE.get_extra_params()
+        params_ids, __ = self.get_extra_params()
         for params_id in params_ids:
             batch_size, num_train_eval = params_id
             gin_bindings = ["rf_vae_score.batch_size = {}".format(batch_size),
@@ -143,8 +143,7 @@ class GenericConfigRFVAE:
             configs.append([gin_config_files, gin_bindings])
         return configs
 
-    @staticmethod
-    def get_extra_params():
+    def get_extra_params(self):
         batch_sizes = [8]
         num_train_evals = [500]
         extra_params = [batch_sizes, num_train_evals]
@@ -160,14 +159,13 @@ class GenericConfigRFVAE:
 
 
 class GenericConfigFVAE:
-    @staticmethod
-    def get_gin_configs(n_samples, val_per_factor):
+    def get_gin_configs(self, n_samples, val_per_factor):
         """ Get FVAE configs, See Generic function description on top of file for more details
         Extra output params are 1) batch_size 2) num_train_evals """
         gin_config_files = ["./disentanglement_lib/config/benchmark/metric_configs/factor_vae_metric.gin"]
 
         configs = []
-        params_ids, __ = GenericConfigFVAE.get_extra_params()
+        params_ids, __ = self.get_extra_params()
         for params_id in params_ids:
             batch_size, num_train_eval = params_id
             gin_bindings = ["factor_vae_score.batch_size = {}".format(batch_size),
@@ -176,8 +174,7 @@ class GenericConfigFVAE:
             configs.append([gin_config_files, gin_bindings])
         return configs
 
-    @staticmethod
-    def get_extra_params():
+    def get_extra_params(self):
         batch_sizes = [16]
         num_train_evals = [500]
         extra_params = [batch_sizes, num_train_evals]
@@ -193,14 +190,13 @@ class GenericConfigFVAE:
 
 
 class GenericConfigBVAE:
-    @staticmethod
-    def get_gin_configs(n_samples, val_per_factor):
+    def get_gin_configs(self, n_samples, val_per_factor):
         """ Get VVAE configs, See Generic function description on top of file for more details
         Extra output params are 1) batch_size 2) num_train_evals """
         gin_config_files = ["./disentanglement_lib/config/benchmark/metric_configs/beta_vae_sklearn.gin"]
 
         configs = []
-        params_ids, __ = GenericConfigBVAE.get_extra_params()
+        params_ids, __ = self.get_extra_params()
         for params_id in params_ids:
             batch_size, num_train_eval = params_id
             gin_bindings = ["beta_vae_sklearn.batch_size = {}".format(batch_size),
@@ -209,8 +205,7 @@ class GenericConfigBVAE:
             configs.append([gin_config_files, gin_bindings])
         return configs
 
-    @staticmethod
-    def get_extra_params():
+    def get_extra_params(self):
         batch_sizes = [16]
         num_train_evals = [500]
         extra_params = [batch_sizes, num_train_evals]
@@ -226,59 +221,59 @@ class GenericConfigBVAE:
 
 
 class GenericConfigDCIRFClass:
-    @staticmethod
-    def get_gin_configs(n_samples, val_per_factor):
+    def get_gin_configs(self, n_samples, val_per_factor):
         return get_dci_configs(n_samples, val_per_factor, "RF_class")
+
+    def get_extra_params(self):
+        return [[]], []
 
     @staticmethod
     def get_metric_fn_id():
         return dci.compute_dci, Metrics.DCI_RF_CLASS
 
-    @staticmethod
-    def get_extra_params():
-        return [[]], []
+
 
 
 class GenericConfigDCIRFReg:
-    @staticmethod
-    def get_gin_configs(n_samples, val_per_factor):
+    def get_gin_configs(self, n_samples, val_per_factor):
         return get_dci_configs(n_samples, val_per_factor, "RF_reg")
+
+    def get_extra_params(self):
+        return [[]], []
 
     @staticmethod
     def get_metric_fn_id():
         return dci.compute_dci, Metrics.DCI_RF_REG
 
-    @staticmethod
-    def get_extra_params():
-        return [[]], []
+
 
 
 class GenericConfigDCILogRegL1:
-    @staticmethod
-    def get_gin_configs(n_samples, val_per_factor):
+    def get_gin_configs(self, n_samples, val_per_factor):
         return get_dci_configs(n_samples, val_per_factor, "LogRegL1")
+
+    def get_extra_params(self):
+        return [[]], []
 
     @staticmethod
     def get_metric_fn_id():
         return dci.compute_dci, Metrics.DCI_LOGREGL1
 
-    @staticmethod
-    def get_extra_params():
-        return [[]], []
+
 
     
 class GenericConfigDCILasso:
-    @staticmethod
-    def get_gin_configs(n_samples, val_per_factor):
+    def get_gin_configs(self, n_samples, val_per_factor):
         return get_dci_configs(n_samples, val_per_factor, "Lasso")
+
+    def get_extra_params(self):
+        return [[]], []
 
     @staticmethod
     def get_metric_fn_id(): 
         return dci.compute_dci, Metrics.DCI_LASSO
     
-    @staticmethod
-    def get_extra_params(): 
-        return [[]], []
+
 
 
 def get_dci_configs(n_samples, val_per_factor, mode): 
@@ -293,8 +288,7 @@ def get_dci_configs(n_samples, val_per_factor, mode):
 
 
 class GenericConfigDCIMIG:
-    @staticmethod
-    def get_gin_configs(n_samples, val_per_factor):
+    def get_gin_configs(self, n_samples, val_per_factor):
         """ Get MODEX configs, See Generic function description on top of file for more details"""
         gin_config_files = ["./disentanglement_lib/config/benchmark/metric_configs/dcimig.gin"]
         gin_bindings = ["dcimig.num_train = {}".format(n_samples),
@@ -302,18 +296,16 @@ class GenericConfigDCIMIG:
                         "discretizer.num_bins = {}".format(val_per_factor)]
         return [[gin_config_files, gin_bindings]]
 
+    def get_extra_params(self):
+        return [[]], []
+
     @staticmethod
     def get_metric_fn_id(): 
         return dcimig.compute_dcimig, Metrics.DCIMIG
     
-    @staticmethod
-    def get_extra_params(): 
-        return [[]], []
-
 
 class GenericConfigMIG:
-    @staticmethod
-    def get_gin_configs(n_samples, val_per_factor):
+    def get_gin_configs(self, n_samples, val_per_factor):
         """ Get MODEX configs, See Generic function description on top of file for more details"""
         gin_config_files = ["./disentanglement_lib/config/benchmark/metric_configs/mig.gin"]
         gin_bindings = ["mig.num_train = {}".format(n_samples),
@@ -321,18 +313,18 @@ class GenericConfigMIG:
                         "discretizer.num_bins = {}".format(val_per_factor)]
         return [[gin_config_files, gin_bindings]]
 
+    def get_extra_params(self):
+        return [[]], []
+
     @staticmethod
     def get_metric_fn_id(): 
         return mig.compute_mig, Metrics.MIG
     
-    @staticmethod
-    def get_extra_params(): 
-        return [[]], []
+
 
 
 class GenericConfigWDG:
-    @staticmethod
-    def get_gin_configs(n_samples, val_per_factor):
+    def get_gin_configs(self, n_samples, val_per_factor):
         """ Get MODEX configs, See Generic function description on top of file for more details"""
         gin_config_files = ["./disentanglement_lib/config/benchmark/metric_configs/wdg.gin"]
         gin_bindings = ["wdg.num_train = {}".format(n_samples),
@@ -340,18 +332,18 @@ class GenericConfigWDG:
                         "discretizer.num_bins = {}".format(val_per_factor)]
         return [[gin_config_files, gin_bindings]]
 
+    def get_extra_params(self):
+        return [[]], []
+
     @staticmethod
     def get_metric_fn_id(): 
         return wdg.compute_wdg, Metrics.WDG
     
-    @staticmethod
-    def get_extra_params(): 
-        return [[]], []
+
 
 
 class GenericConfigJEMMIG:
-    @staticmethod
-    def get_gin_configs(n_samples, val_per_factor):
+    def get_gin_configs(self, n_samples, val_per_factor):
         """ Get MODEX configs, See Generic function description on top of file for more details"""
         gin_config_files = ["./disentanglement_lib/config/benchmark/metric_configs/jemmig.gin"]
         gin_bindings = ["jemmig.num_train = {}".format(n_samples),
@@ -359,18 +351,18 @@ class GenericConfigJEMMIG:
                         "discretizer.num_bins = {}".format(val_per_factor)]
         return [[gin_config_files, gin_bindings]]
 
+    def get_extra_params(self):
+        return [[]], []
+
     @staticmethod
-    def get_metric_fn_id(): 
+    def get_metric_fn_id():
         return jemmig.compute_jemmig, Metrics.JEMMIG
     
-    @staticmethod
-    def get_extra_params(): 
-        return [[]], []
+
     
     
 class GenericConfigMIGSUP:
-    @staticmethod
-    def get_gin_configs(n_samples, val_per_factor):
+    def get_gin_configs(self, n_samples, val_per_factor):
         """ Get MODEX configs, See Generic function description on top of file for more details"""
         gin_config_files = ["./disentanglement_lib/config/benchmark/metric_configs/mig_sup.gin"]
         gin_bindings = ["mig_sup.num_train = {}".format(n_samples),
@@ -378,10 +370,11 @@ class GenericConfigMIGSUP:
                         "discretizer.num_bins = {}".format(val_per_factor)]
         return [[gin_config_files, gin_bindings]]
 
+    def get_extra_params(self):
+        return [[]], []
+
     @staticmethod
     def get_metric_fn_id(): 
         return mig_sup.compute_mig_sup, Metrics.MIG_SUP
     
-    @staticmethod
-    def get_extra_params(): 
-        return [[]], []
+

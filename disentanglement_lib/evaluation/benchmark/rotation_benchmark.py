@@ -8,7 +8,6 @@
 #     http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
@@ -38,27 +37,26 @@ from disentanglement_lib.evaluation.benchmark.sampling.sampling_factor_fixed imp
 from disentanglement_lib.evaluation.benchmark.sampling.sampling_factor_varied import SingleFactorVariedSampling
 from disentanglement_lib.evaluation.benchmark.sampling.generic_sampling import GenericSampling
 
-from disentanglement_lib.evaluation.benchmark.scenarios import noise_dataholder
+from disentanglement_lib.evaluation.benchmark.scenarios import rotation_dataholder
 from disentanglement_lib.evaluation.benchmark.benchmark_utils import manage_processes, init_dict, add_to_dict
 from disentanglement_lib.config.benchmark.scenarios.bindings import Metrics
-from disentanglement_lib.evaluation.benchmark.scenarios.noise_dataholder import NoiseMode
+from disentanglement_lib.evaluation.benchmark.scenarios.rotation_dataholder import RotationMode
 
 
-def test_metric(config_class, num_factors, val_per_factor, index_dict, queue, noise_mode):
+def test_metric(config_class, num_factors, val_per_factor, index_dict, queue, rotation_mode):
     # Get run parameters
-    K = index_dict["K"]
-    alpha = index_dict["alpha"]
+    theta = index_dict["theta"]
     seed = index_dict["seed"]
     f = index_dict["f"]
 
     config_fn = config_class()
 
     # get params
-    n_samples = noise_dataholder.NoiseDataHolder.get_expected_len(num_factors, val_per_factor, K)
+    n_samples = rotation_dataholder.RotationDataHolder.get_expected_len(num_factors, val_per_factor, 1)
     metric_fn = config_fn.get_metric_fn_id()[0]
 
     configs = config_fn.get_gin_configs(n_samples, val_per_factor)
-    param_ids, all_params = config_fn.get_extra_params()
+    param_ids, all_params = config_fn.get_extra_params() 
     results = init_dict({}, all_params, depth=0)
     
     for i, config in enumerate(configs):
@@ -67,13 +65,12 @@ def test_metric(config_class, num_factors, val_per_factor, index_dict, queue, no
         # apply configs
         gin.parse_config_files_and_bindings(gin_config_files, gin_bindings)
 
-        dataholder = noise_dataholder.NoiseDataHolder(alpha=alpha,
-                                                      seed=seed,
-                                                      K=K,
-                                                      num_factors=num_factors,
-                                                      val_per_factor=val_per_factor,
-                                                      noise_mode=noise_mode)
-        # set random states & go!
+        dataholder = rotation_dataholder.RotationDataHolder(seed=seed,
+                                                            theta=theta,
+                                                            rotation_mode=rotation_mode,
+                                                            num_factors=num_factors,
+                                                            val_per_factor=val_per_factor)
+
         np.random.seed(seed)
         random_state = np.random.RandomState(seed)
 
@@ -83,7 +80,7 @@ def test_metric(config_class, num_factors, val_per_factor, index_dict, queue, no
         
         gin.clear_config()
         
-    return_dict = {"K": K, "alpha": alpha, "seed": seed, "f": f, "result": results}
+    return_dict = {"theta": theta, "seed": seed, "f": f, "result": results}
     queue.put(return_dict)  # Multiprocessing accessible list.
     
     return return_dict
@@ -94,96 +91,89 @@ def organize_results(result_dicts_list, metric_id):
     with final index being the metric name/list of seeded results"""
 
     # Find all unique values
-    Ks = []
-    alphas = []
+    thetas = []
     seeds = []
     for result_dict in result_dicts_list:
-        Ks.append(result_dict["K"])
-        alphas.append(result_dict["alpha"])
+        thetas.append(result_dict["theta"])
         seeds.append(result_dict["seed"])
 
     # Isolate all values
-    Ks = np.unique(Ks)
-    alphas = np.unique(alphas)
-    seeds = np.unique(seeds)
+    thetas = np.unique(thetas)
 
     # initialize organized_results
     organized_results = {}
-    for K in Ks:
-        organized_results[K] = {}
-        for alpha in alphas:
-            organized_results[K][alpha] = {}
+    for theta in thetas:
+        organized_results[theta] = {}
 
     # Fill organized dict!
     for result_dict in result_dicts_list:
         f = result_dict['f']
-        K = result_dict['K']
-        alpha = result_dict['alpha']
+        theta = result_dict['theta']
         fn_result_dict = result_dict["result"]
 
         # Bvae and FVAE have common extra parameters to evaluate.
         if metric_id == Metrics.BVAE or metric_id == Metrics.FVAE or metric_id == Metrics.RFVAE:
             # if a dict entry does not exist yet.
-            if organized_results[K][alpha] == {}:
+            if organized_results[theta] == {}:
                 for batch_size, num_eval_dict in fn_result_dict.items():
-                    organized_results[K][alpha][batch_size] = {}
+                    organized_results[theta][batch_size] = {}
 
                     for num_eval, scores_dict in num_eval_dict.items():
-                        organized_results[K][alpha][batch_size][num_eval] = {}
+                        organized_results[theta][batch_size][num_eval] = {}
 
                         for score_name, __ in scores_dict.items():
-                            organized_results[K][alpha][batch_size][num_eval][score_name] = []
+                            organized_results[theta][batch_size][num_eval][score_name] = []
 
             # Fill in the organized dict. append seeded results
             for batch_size, num_eval_dict in fn_result_dict.items():
                 for num_eval, scores_dict in num_eval_dict.items():
                     for score_name, score in scores_dict.items():
-                        organized_results[K][alpha][batch_size][num_eval][score_name].append(score)
+                        organized_results[theta][batch_size][num_eval][score_name].append(score)
 
         # All other metric organize their dictionnary here.
         else:
             # if a dict entry does not exist yet.
-            if organized_results[K][alpha] == {}:
+            if organized_results[theta] == {}:
                 for key, __ in fn_result_dict.items():
-                    organized_results[K][alpha][key] = []
+                    organized_results[theta][key] = []
 
             # F ill in the organized dict. append seeded results
             for metric_name, value in fn_result_dict.items():
-                organized_results[K][alpha][metric_name].append(value)
+                organized_results[theta][metric_name].append(value)
 
     return organized_results
 
 
-def noise_scenario_main(config_fn, num_factors, val_per_factor, noise_mode, nseeds=50, process_mode="debug"):
+def rotation_scenario_main(config_fn, num_factors, val_per_factor, rotation_mode, nseeds=50, process_mode="debug"):
     # define scenario parameter alpha
-    alphas = np.arange(0, 1.01, 0.2)
-    alphas = [float("{:.2f}".format(a)) for a in alphas]
+    thetas = np.arange(0, np.pi/4 + np.pi/20, np.pi/20)
+    thetas = [float("{:.2f}".format(a)) for a in thetas]
     
     processes = []
     result_dicts_list = []
     q = mp.Queue()
      
-    for K in [1, 8]:
-        for alpha in alphas: # set noise strength
-            
-            for seed in range(nseeds):
-                index_dict = {'K': K, 'alpha': alpha, 'seed': seed, 'f': str(config_fn.get_metric_fn_id()[0])}
-                
-                if process_mode == "debug": # allows breakpoint debug.
-                    result_dicts_list.append(test_metric(config_fn, num_factors, val_per_factor, index_dict, q, noise_mode))
-                    print(result_dicts_list[-1])
-                    
-                elif process_mode == "mp": 
-                    process = mp.Process(target=test_metric,
-                                         args=(config_fn,
-                                               num_factors,
-                                               val_per_factor,
-                                               index_dict,
-                                               q,
-                                               noise_mode),
-                                         name="Noise1_K={}, alpha={}, seed = {}, fn={}".format(K, alpha, seed, str(config_fn)))
-                    
-                    processes.append(process)
+
+    for theta in thetas:  # set noise strength
+
+        for seed in range(nseeds):
+            index_dict = {'theta': theta, 'seed': seed, 'f': str(config_fn.get_metric_fn_id()[0])}
+
+            if process_mode == "debug": # allows breakpoint debug.
+                result_dicts_list.append(test_metric(config_fn, num_factors, val_per_factor, index_dict, q, rotation_mode))
+                print(result_dicts_list[-1])
+
+            elif process_mode == "mp":
+                process = mp.Process(target=test_metric,
+                                     args=(config_fn,
+                                           num_factors,
+                                           val_per_factor,
+                                           index_dict,
+                                           q,
+                                           rotation_mode),
+                                     name="Rotation, theta={}, seed = {}, fn={}".format(theta, seed, str(config_fn)))
+
+                processes.append(process)
                 
     if process_mode == "mp": 
         result_dicts_list = manage_processes(processes, q)

@@ -30,10 +30,10 @@ from enum import Enum
 class NoiseMode(Enum):
     FAV_CONTINUOUS = 1
     FAV_CONTINUOUS_EXTRA_Z = 2
-    FAV_CONTINUOUS_SEEDED_DATASET = 3
-    FAV_DISCRETE = 4
-    FAV_DISCRETE_EXTRA_Z = 5
-    FAV_DISCRETE_SEEDED_DATASET = 6
+    FAV_DISCRETE = 3
+    FAV_DISCRETE_EXTRA_Z = 4
+    FAV_CONTINUOUS_ADD_NOISE = 5
+    FAV_CONTINUOUS_ADD_NOISE_EXTRA_Z = 6
     FAV_DISCRETE_ADD_NOISE = 7
     FAV_DISCRETE_ADD_NOISE_EXTRA_Z = 8
 
@@ -50,33 +50,19 @@ class NoiseDataHolder(DataHolder):
         self.n_extra_z = n_extra_z
         self.random_state = np.random.RandomState(seed)
         self.factor_sizes = [val_per_factor]*num_factors
-        """
-        [NoiseMode.FAV_CONTINUOUS,
-               NoiseMode.FAV_CONTINUOUS_EXTRA_Z,
-               NoiseMode.FAV_CONTINUOUS_SEEDED_DATASET,
-               NoiseMode.FAV_DISCRETE,
-               NoiseMode.FAV_DISCRETE_EXTRA_Z,
-               NoiseMode.FAV_DISCRETE_SEEDED_DATASET,
-               NoiseMode.FAV_DISCRETE_ADD_NOISE,
-               NoiseMode.FAV_DISCRETE_ADD_NOISE_EXTRA_Z]
-        """
+
         # parse through noise modes to define scenario configs
-        if noise_mode == NoiseMode.FAV_CONTINUOUS or noise_mode == NoiseMode.FAV_CONTINUOUS_EXTRA_Z or noise_mode == NoiseMode.FAV_CONTINUOUS_SEEDED_DATASET:
+        if noise_mode == NoiseMode.FAV_CONTINUOUS or noise_mode == NoiseMode.FAV_CONTINUOUS_EXTRA_Z or noise_mode == NoiseMode.FAV_CONTINUOUS_ADD_NOISE or noise_mode == NoiseMode.FAV_CONTINUOUS_ADD_NOISE_EXTRA_Z:
             self.fav_continuous = True
         else:
             self.fav_continuous = False
 
-        if noise_mode == NoiseMode.FAV_CONTINUOUS_EXTRA_Z or noise_mode == NoiseMode.FAV_DISCRETE_EXTRA_Z or noise_mode == NoiseMode.FAV_DISCRETE_ADD_NOISE_EXTRA_Z:
+        if noise_mode == NoiseMode.FAV_CONTINUOUS_EXTRA_Z or noise_mode == NoiseMode.FAV_DISCRETE_EXTRA_Z or noise_mode == NoiseMode.FAV_CONTINUOUS_ADD_NOISE_EXTRA_Z or noise_mode == NoiseMode.FAV_DISCRETE_ADD_NOISE_EXTRA_Z:
             self.extra_z = True
         else:
             self.extra_z = False
 
-        if noise_mode == NoiseMode.FAV_DISCRETE_SEEDED_DATASET or noise_mode == NoiseMode.FAV_CONTINUOUS_SEEDED_DATASET:
-            self.seeded_dataset = True
-        else:
-            self.seeded_dataset = False
-
-        if noise_mode == NoiseMode.FAV_DISCRETE_ADD_NOISE or noise_mode == NoiseMode.FAV_DISCRETE_ADD_NOISE_EXTRA_Z:
+        if noise_mode == NoiseMode.FAV_DISCRETE_ADD_NOISE or noise_mode == NoiseMode.FAV_DISCRETE_ADD_NOISE_EXTRA_Z or noise_mode == NoiseMode.FAV_CONTINUOUS_ADD_NOISE or noise_mode == NoiseMode.FAV_CONTINUOUS_ADD_NOISE_EXTRA_Z:
             self.add_noise = True
             self.replace_noise = False
         else:

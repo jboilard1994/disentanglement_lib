@@ -44,11 +44,13 @@ from disentanglement_lib.config.benchmark.scenarios.bindings import Metrics
 from disentanglement_lib.evaluation.benchmark.scenarios.nonlinear_dataholder import NonlinearMode
 
 
-def test_metric(config_fn, num_factors, val_per_factor, index_dict, queue, non_linear_mode):
+def test_metric(config_class, num_factors, val_per_factor, index_dict, queue, non_linear_mode):
     # Get run parameters
     seed = index_dict["seed"]
     f = index_dict["f"]
-    
+
+    config_fn = config_class()
+
     # get params
     n_samples = nonlinear_dataholder.NonlinearDataHolder.get_expected_len(num_factors, val_per_factor, 1)
     metric_fn = config_fn.get_metric_fn_id()[0]
