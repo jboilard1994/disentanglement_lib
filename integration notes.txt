@@ -1,0 +1,44 @@
+put dummy representation generator in disentanglement-lib / data / representation generator
+1 scenario -> 1 file
+
+scenario must follow structure of disentanglement-lib / data / ground_truth / cars3d.py (or others)
+	-- might have to change sample-factors / sample-observation_from_factors stuff to have p(x)p(y|x) insteand of p(y)
+	-- this means that scenarios will have their own utils.py
+	-- Metric code will have to be adapted...
+
+adapted metrics go in
+
+
+
+
+
+dis-lib evaluate -> /evaluation/evaluate.py
+for each metric :
+evaluate_with_gin(model-dir, output-dir, overwrite=False, gin_config_files=None, gin_bindings={changes depending of metric})
+evaluate(model_dir,output_dir,overwrite=False,evaluation_fn=gin.REQUIRED,random_seed=gin.REQUIRED,name="")
+get dataset -> named_data.get_named_ground_truth_data()
+evaluation_fn(dataset, _representation_function, random_seed,     ???????artifact-dir????????     ) {bvae, fvae, etc}
+save_results
+
+Scenarios integrated in d-lib evaluate:
+distribution biases go in "dataset", specified by gin query "dataset.name"
+representation function go in _representation_function(x). It will be seamless if integrated into a tf module file AT MODEL_DIR. # Path to TFHub module of previously trained representation.
+  															module_path = os.path.join(model_dir, "tfhub")
+  															with hub.eval_function_for_module(module_path) as f:
+
+I could rather base myself on these function, which I could batch call in cmd :
+Metric test function:
+dmefine greound-truth
+define rep-func
+define seed
+compute score
+assert!
+
+however they are programmed as test-cases
+would need to make a DCIScenario class, one per metric
+not test case
+save in a folder.
+
+
+
+
