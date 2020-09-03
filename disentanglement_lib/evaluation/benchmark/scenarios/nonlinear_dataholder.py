@@ -40,11 +40,10 @@ class NonlinearDataHolder(DataHolder):
     """Author : Jonathan Boilard 2020
     Dataset where dummy factors are also the observations, with ratio of noise to relationship between code/factors."""
 
-    def __init__(self, seed, non_linear_mode, num_factors=2, val_per_factor=10):
+    def __init__(self, random_state, non_linear_mode, num_factors=2, val_per_factor=10):
         self.val_per_factor = val_per_factor
         # self.noise_mode = noise_mode
         # self.n_extra_z = n_extra_z
-        self.random_state = np.random.RandomState(seed)
         self.factor_sizes = [val_per_factor] * num_factors
 
         # parse through noise modes to define scenario configs
@@ -59,7 +58,7 @@ class NonlinearDataHolder(DataHolder):
         elif non_linear_mode == NonlinearMode.SIGMOID_FAV_CONTINUOUS or non_linear_mode == NonlinearMode.SIGMOID_FAV_DISCRETE:
             self.fn_class = Sigmoid
 
-        discrete_factors, continuous_factors, representations = self._load_data(num_factors)
+        discrete_factors, continuous_factors, representations = self._load_data(random_state, num_factors)
         DataHolder.__init__(self, discrete_factors, continuous_factors, representations)
         pass
 
@@ -67,7 +66,7 @@ class NonlinearDataHolder(DataHolder):
     def get_expected_len(num_factors, val_per_factor, k):
         return k * val_per_factor ** num_factors
 
-    def _load_data(self, num_factors):
+    def _load_data(self, random_state, num_factors):
         """Author : Jonathan Boilard 2020
         Creates artificial dataset.
 
@@ -98,7 +97,7 @@ class NonlinearDataHolder(DataHolder):
         # Define Diagonal perfect non-linear Relationship Matrix
         r_matrix = [[None for __ in range(num_factors)] for __ in range(n_codes)]
         for i in range(n_codes):
-            f = self.fn_class(self.random_state)
+            f = self.fn_class(random_state)
             r_matrix[i][i] = f  # fill up diagonal.
 
         # Get random binned continuous factor values and get representations
@@ -111,7 +110,7 @@ class NonlinearDataHolder(DataHolder):
             for i, d_feature in enumerate(discrete_features):
 
                 if self.fav_continuous:
-                    continuous_vals = self.random_state.uniform(factor_d_bins[i][d_feature][0],  # min
+                    continuous_vals = random_state.uniform(factor_d_bins[i][d_feature][0],  # min
                                                                 factor_d_bins[i][d_feature][1])  # max
                 else:
                     continuous_vals = (factor_d_bins[i][d_feature][0] + factor_d_bins[i][d_feature][1]) / 2
@@ -133,7 +132,7 @@ class NonlinearDataHolder(DataHolder):
 
         """if self.extra_z:
             representations = np.asarray(representations)
-            noise = self.random_state.normal(size=(len(representations), self.n_extra_z))
+            noise = random_state.normal(size=(len(representations), self.n_extra_z))
             representations = np.concatenate((representations, noise), axis=1)"""
 
         return np.array(discrete_factors), np.array(continuous_factors), np.array(representations)

@@ -52,16 +52,14 @@ noise_modes = [NoiseMode.FAV_CONTINUOUS,
                NoiseMode.FAV_DISCRETE_ADD_NOISE,
                NoiseMode.FAV_DISCRETE_ADD_NOISE_EXTRA_Z]
 
-noise_modes = [NoiseMode.FAV_CONTINUOUS_ADD_NOISE,
-               NoiseMode.FAV_CONTINUOUS_ADD_NOISE_EXTRA_Z,
-               NoiseMode.FAV_DISCRETE_ADD_NOISE,
-               NoiseMode.FAV_DISCRETE_ADD_NOISE_EXTRA_Z]
+config_funcs = [ConfigDCILogRegL1]
+noise_modes = [NoiseMode.FAV_CONTINUOUS, NoiseMode.FAV_CONTINUOUS_ADD_NOISE]
 
 if __name__ == "__main__": 
     process_mode = "mp"  # debug or mp
     num_factors = 3
     val_per_factor = 10 
-    n_seeds = 10
+    n_seeds = 3
 
     for noise_mode in noise_modes:
         all_results = {}

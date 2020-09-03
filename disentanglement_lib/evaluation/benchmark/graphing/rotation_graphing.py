@@ -71,6 +71,8 @@ def make_violin_plot(theta_dict, metric_names, num_factors, val_per_factor, alph
         plt.xticks(range(1, len(alphas) + 1), alphas)
         plt.xlabel("Noise-signal ratio")
         plt.ylabel(m_name)
+        x1, x2, y1, y2 = plt.axis()
+        plt.axis((x1, x2, 0, 1))
         plt.savefig('figs/{}/{}_{}'.format(str(rotation_mode), m_name, title_str), bbox_inches='tight')
         plt.close()
 

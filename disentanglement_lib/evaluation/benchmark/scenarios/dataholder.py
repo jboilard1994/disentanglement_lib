@@ -17,7 +17,7 @@ class DataHolder:
         self.continuous_factors = continuous_factors
         self.factors = discrete_factors
         self.embed_codes = representations
-        
+
         #factor and sampling related params
         self.factors_indices = list(range(self.factors.shape[-1]))
         self.factor_sizes = np.add(np.max(self.factors, axis=0), 1)
@@ -46,10 +46,7 @@ class DataHolder:
         len of a class object is len of the dataset, represented by csv filepaths""" 
         return len(self.factors)
     
-       
-    
-    
-    
+
     def reset(self):
         self.sampling.reset_sampling_objects()
         pass

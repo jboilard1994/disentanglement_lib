@@ -66,14 +66,13 @@ def test_metric(config_class, num_factors, val_per_factor, index_dict, queue, mo
         # apply configs
         gin.parse_config_files_and_bindings(gin_config_files, gin_bindings)
 
+        # set random states & go!
+        random_state = np.random.RandomState(seed)
         dataholder = modcompact_dataholder.ModCompactDataHolder(alpha=alpha,
-                                                                seed=seed,
+                                                                random_state=random_state,
                                                                 num_factors=num_factors,
                                                                 val_per_factor=val_per_factor,
                                                                 mod_compact_mode=mod_compact_mode)
-        # set random states & go!
-        np.random.seed(seed)
-        random_state = np.random.RandomState(seed)
 
         # Get scores and save in matrix
         score = metric_fn(dataholder, random_state)

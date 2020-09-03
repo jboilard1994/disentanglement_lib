@@ -40,17 +40,16 @@ class ModCompactDataHolder(DataHolder):
     """Author : Jonathan Boilard 2020
     Dataset where dummy factors are also the observations, with ratio of noise to relationship between code/factors."""
 
-    def __init__(self, seed, alpha, mod_compact_mode, num_factors=3, val_per_factor=10, n_extra_z=5):
+    def __init__(self, random_state, alpha, mod_compact_mode, num_factors=3, val_per_factor=10, n_extra_z=5):
         if mod_compact_mode == ModCompactMode.TEST_MOD_REDUCE:
             num_factors = 4
 
         self.alpha = alpha
         self.val_per_factor = val_per_factor
         self.mod_compact_mode = mod_compact_mode
-        self.random_state = np.random.RandomState(seed)
         self.factor_sizes = [val_per_factor]*num_factors
 
-        discrete_factors, continuous_factors, representations = self._load_data(num_factors, alpha)
+        discrete_factors, continuous_factors, representations = self._load_data(random_state, num_factors, alpha)
         DataHolder.__init__(self, discrete_factors, continuous_factors, representations)
         pass
     
@@ -60,7 +59,7 @@ class ModCompactDataHolder(DataHolder):
             num_factors = 4
         return val_per_factor**num_factors
 
-    def _load_data(self, num_factors, alpha):
+    def _load_data(self, random_state, num_factors, alpha):
         """Author : Jonathan Boilard 2020
         Creates artificial dataset.
 
@@ -98,8 +97,8 @@ class ModCompactDataHolder(DataHolder):
             continuous_features = []
             for i, d_feature in enumerate(discrete_features):
 
-                continuous_vals = self.random_state.uniform(factor_d_bins[i][d_feature][0],  # min
-                                                            factor_d_bins[i][d_feature][1])  # max
+                continuous_vals = random_state.uniform(factor_d_bins[i][d_feature][0],  # min
+                                                       factor_d_bins[i][d_feature][1])  # max
 
                 continuous_features.append(continuous_vals)
                 pass
@@ -111,12 +110,12 @@ class ModCompactDataHolder(DataHolder):
                                       # Generate representations for each set of continuous features
         R = np.identity(num_factors)  # #### code-factor relationships for each sub scenario aligned with matmuls :
                                                                         #  z0 z1 z2  #
-        if self.mod_compact_mode == ModCompactMode.TEST_BLUR:            # | 1  a  a |
+        if self.mod_compact_mode == ModCompactMode.TEST_BLUR:           # | 1  a  a |
             R = np.ones((num_factors, num_factors))*alpha               # | a  1  a |
             for i in range(num_factors):                                # | a  a  1 |
                 R[i, i] = 1
 
-        if self.mod_compact_mode == ModCompactMode.TEST_CODE_FACTOR_DECAY:      # | 1 0  0  |
+        if self.mod_compact_mode == ModCompactMode.TEST_CODE_FACTOR_DECAY:     # | 1 0  0  |
             R[num_factors - 1, num_factors - 1] = 1 - alpha                    # | 0 1  0  |
                                                                                # | 0 0 1-a |
 
@@ -144,15 +143,15 @@ class ModCompactDataHolder(DataHolder):
 
             # Add noise if necessary.
             if self.mod_compact_mode == ModCompactMode.TEST_CODE_FACTOR_DECAY:
-                noise = self.random_state.uniform(low=-1, high=1)
+                noise = random_state.uniform(low=-1, high=1)
                 rep[-1] = noise*alpha + rep[-1]
 
             elif self.mod_compact_mode == ModCompactMode.TEST_MOD_MISSING_CHECK:
-                noise = self.random_state.uniform(low=-1, high=1)
+                noise = random_state.uniform(low=-1, high=1)
                 rep[-1] = noise + rep[-1]
 
             elif self.mod_compact_mode == ModCompactMode.TEST_COMPACT_REDUCE:
-                noise = self.random_state.uniform(low=-1, high=1, size=(num_factors,))
+                noise = random_state.uniform(low=-1, high=1, size=(num_factors,))
                 rep[num_factors:] = rep[num_factors:] + noise*(1-alpha)
 
             representations.append(rep)

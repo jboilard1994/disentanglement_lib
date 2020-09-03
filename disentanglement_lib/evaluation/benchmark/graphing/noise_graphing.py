@@ -67,19 +67,22 @@ def make_violin_plot(K_dict, metric_names, num_factors, val_per_factor, alphas, 
             all_scores = [get_dict_element(d, indexes.copy()) for alpha_val, d in alpha_dict.items()]
             add_label(plt.violinplot(all_scores, showmeans=True), "K = {}".format(K))
 
-            title_str = ""
-            for index, index_name in zip(orig_indexes, indexes_name):
-                title_str = title_str + "{}_{} ".format(index_name, index)
+        title_str = ""
+        for index, index_name in zip(orig_indexes, indexes_name):
+            title_str = title_str + "{}_{} ".format(index_name, index)
 
-            plt.title(
-                "{}: Noise".format(m_name) + title_str + "K = {}, {} Factors / {} values each".format(K, num_factors,
-                                                                                                      val_per_factor))
-            plt.xticks(range(1, len(alphas) + 1), alphas)
-            plt.xlabel("Noise-signal ratio")
-            plt.ylabel(m_name)
-            plt.legend(*zip(*labels), loc='center left', bbox_to_anchor=(1, 0.5))
-            plt.savefig('figs/{}/{}_{}'.format(str(noise_mode), m_name, title_str), bbox_inches='tight')
-            plt.close()
+        plt.title("{}: Noise".format(m_name) + title_str + "{} Factors / {} values each".format(num_factors, val_per_factor))
+        plt.xticks(range(1, len(alphas) + 1), alphas)
+        plt.xlabel("Noise-signal ratio")
+        plt.ylabel(m_name)
+        plt.legend(*zip(*labels), loc='center left', bbox_to_anchor=(1, 0.5))
+        x1, x2, y1, y2 = plt.axis()
+        plt.axis((x1, x2, 0, 1))
+        plt.savefig('figs/{}/{}_{}'.format(str(noise_mode), m_name, title_str), bbox_inches='tight')
+        plt.close()
+
+
+
 
 
 def plot_mean_lines(means, mnames, alphas, K, noise_mode):
