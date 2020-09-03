@@ -62,7 +62,7 @@ if __name__ == "__main__":
     process_mode = "mp"  # debug or mp
     num_factors = 3
     val_per_factor = 10
-    n_seeds = 10
+    n_seeds = 15
 
     for mod_compact_mode in mod_compact_modes:
         all_results = {}

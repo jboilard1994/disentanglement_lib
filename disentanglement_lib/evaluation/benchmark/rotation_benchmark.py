@@ -65,14 +65,14 @@ def test_metric(config_class, num_factors, val_per_factor, index_dict, queue, ro
         # apply configs
         gin.parse_config_files_and_bindings(gin_config_files, gin_bindings)
 
-        dataholder = rotation_dataholder.RotationDataHolder(seed=seed,
+        random_state = np.random.RandomState(seed)
+        dataholder = rotation_dataholder.RotationDataHolder(random_state=random_state,
                                                             theta=theta,
                                                             rotation_mode=rotation_mode,
                                                             num_factors=num_factors,
                                                             val_per_factor=val_per_factor)
 
-        np.random.seed(seed)
-        random_state = np.random.RandomState(seed)
+
 
         # Get scores and save in matrix
         score = metric_fn(dataholder, random_state)
@@ -179,13 +179,3 @@ def rotation_scenario_main(config_fn, num_factors, val_per_factor, rotation_mode
         result_dicts_list = manage_processes(processes, q)
     
     return organize_results(result_dicts_list, config_fn.get_metric_fn_id()[1])
-
-
-
-          
-                   
-
-
-  
-  
-  

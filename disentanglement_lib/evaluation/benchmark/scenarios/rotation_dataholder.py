@@ -35,14 +35,13 @@ class RotationDataHolder(DataHolder):
     """Author : Jonathan Boilard 2020
     Dataset where dummy factors are also the observations, with ratio of noise to relationship between code/factors."""
 
-    def __init__(self, seed, theta, rotation_mode, num_factors=2, val_per_factor=10):
+    def __init__(self, random_state, theta, rotation_mode, num_factors=2, val_per_factor=10):
         self.theta = theta
         self.val_per_factor = val_per_factor
         self.rotation_mode = rotation_mode
-        self.random_state = np.random.RandomState(seed)
         self.factor_sizes = [val_per_factor]*num_factors
 
-        discrete_factors, continuous_factors, representations = self._load_data(num_factors, theta)
+        discrete_factors, continuous_factors, representations = self._load_data(random_state, num_factors, theta)
         DataHolder.__init__(self, discrete_factors, continuous_factors, representations)
         pass
     
@@ -50,7 +49,7 @@ class RotationDataHolder(DataHolder):
     def get_expected_len(num_factors, val_per_factor, k):
         return k*val_per_factor**num_factors
 
-    def _load_data(self, num_factors, theta):
+    def _load_data(self, random_state, num_factors, theta):
         """Author : Jonathan Boilard 2020
         Creates artificial dataset.
 
@@ -91,8 +90,8 @@ class RotationDataHolder(DataHolder):
             continuous_features = []
             for i, d_feature in enumerate(discrete_features):
 
-                continuous_vals = self.random_state.uniform(factor_d_bins[i][d_feature][0],  # min
-                                                            factor_d_bins[i][d_feature][1])  # max
+                continuous_vals = random_state.uniform(factor_d_bins[i][d_feature][0],  # min
+                                                       factor_d_bins[i][d_feature][1])  # max
 
                 continuous_features.append(continuous_vals)
                 pass

@@ -65,13 +65,13 @@ def test_metric(config_class, num_factors, val_per_factor, index_dict, queue, no
         # apply configs
         gin.parse_config_files_and_bindings(gin_config_files, gin_bindings)
 
-        dataholder = nonlinear_dataholder.NonlinearDataHolder(seed=seed,
+        # set random states & go!
+        random_state = np.random.RandomState(seed)
+        dataholder = nonlinear_dataholder.NonlinearDataHolder(random_state=random_state,
                                                               non_linear_mode=non_linear_mode,
                                                               num_factors=num_factors,
                                                               val_per_factor=val_per_factor)
-        # set random states & go!
-        np.random.seed(seed)
-        random_state = np.random.RandomState(seed)
+
 
         # Get scores and save in matrix
         score = metric_fn(dataholder, random_state)

@@ -52,11 +52,6 @@ noise_modes = [NoiseMode.FAV_CONTINUOUS,
                NoiseMode.FAV_DISCRETE_ADD_NOISE,
                NoiseMode.FAV_DISCRETE_ADD_NOISE_EXTRA_Z]
 
-noise_modes = [NoiseMode.FAV_CONTINUOUS_ADD_NOISE,
-               NoiseMode.FAV_CONTINUOUS_ADD_NOISE_EXTRA_Z,
-               NoiseMode.FAV_DISCRETE_ADD_NOISE,
-               NoiseMode.FAV_DISCRETE_ADD_NOISE_EXTRA_Z]
-
 if __name__ == "__main__": 
     process_mode = "mp"  # debug or mp
     num_factors = 3
