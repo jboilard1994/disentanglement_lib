@@ -189,13 +189,3 @@ def noise_scenario_main(config_fn, num_factors, val_per_factor, noise_mode, nsee
         result_dicts_list = manage_processes(processes, q)
     
     return organize_results(result_dicts_list, config_fn.get_metric_fn_id()[1])
-
-
-
-          
-                   
-
-
-  
-  
-  

@@ -92,16 +92,16 @@ def make_violin_plot(violin_data, labels, dict_, metric_names, num_factors, val_
                 add_label(p, "({}) {}".format(i, metric_labels[n]), face_color)
                 i = i+1
 
-        x_ticks = ["({})".format(i) for i in range(1, len(labels)+1)]
 
         plt.title(
             "Non-Linear All Metrics : {}; {} Factors / {} values each".format(str(nonlinear_mode), num_factors, val_per_factor))
         plt.ylabel("Metric Score")
 
-        x1, x2, y1, y2 = plt.axis()
-        plt.axis((x1, x2, 0, 1))
         plt.legend(*zip(*legend_labels), loc='center left', bbox_to_anchor=(1, 0.5))
-        plt.xticks(range(1,len(x_ticks)+1), x_ticks)
+        x_ticks = ["({})".format(n) for n in range(0, i)]
+        plt.xticks(range(1, i+1), x_ticks)
+        x1, x2, y1, y2 = plt.axis()
+        plt.axis((x1, x2, 0, 1.01))
         plt.savefig('figs/{}/{}_{}'.format(str(nonlinear_mode), m_name, "all_metrics_violin"), bbox_inches='tight')
         plt.close()
 

@@ -45,9 +45,7 @@ config_funcs = [ConfigRFVAE,
                 ConfigMIGSUP]
 
 nonlinear_modes = [NonlinearMode.SIGMOID_FAV_CONTINUOUS,
-                   NonlinearMode.SIGMOID_FAV_DISCRETE,
-                   NonlinearMode.QUADRATIC_FAV_CONTINUOUS,
-                   NonlinearMode.QUADRATIC_FAV_DISCRETE]
+                   NonlinearMode.QUADRATIC_FAV_CONTINUOUS]
 
 if __name__ == "__main__":
     num_factors = 3

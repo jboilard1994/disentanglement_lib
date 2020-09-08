@@ -65,6 +65,12 @@ def make_violin_plot(K_dict, metric_names, num_factors, val_per_factor, alphas, 
         labels = []
         for K, alpha_dict in K_dict.items():
             all_scores = [get_dict_element(d, indexes.copy()) for alpha_val, d in alpha_dict.items()]
+
+            if m_name == "IRS_disentanglement_scores":
+                for i, __ in enumerate(alphas):
+                    for s, seed in enumerate(all_scores[i]):
+                        all_scores[i][s] = np.mean(all_scores[i][s][:num_factors])
+
             add_label(plt.violinplot(all_scores, showmeans=True), "K = {}".format(K))
 
         title_str = ""
@@ -77,7 +83,7 @@ def make_violin_plot(K_dict, metric_names, num_factors, val_per_factor, alphas, 
         plt.ylabel(m_name)
         plt.legend(*zip(*labels), loc='center left', bbox_to_anchor=(1, 0.5))
         x1, x2, y1, y2 = plt.axis()
-        plt.axis((x1, x2, 0, 1))
+        plt.axis((x1, x2, 0, 1.01))
         plt.savefig('figs/{}/{}_{}'.format(str(noise_mode), m_name, title_str), bbox_inches='tight')
         plt.close()
 
@@ -118,7 +124,7 @@ def make_graphs(results_dict, num_factors, val_per_factor, noise_mode):
     # iterate through metrics
     for f_key, K_dict in results_dict.items():
 
-        metric_names = get_names(f_key)
+        metric_names = get_names(f_key, mode="noise")
 
         # These metrics have extra common parameters (batch-size, num_eval_train)
         if f_key == Metrics.BVAE or f_key == Metrics.FVAE or f_key == Metrics.RFVAE:

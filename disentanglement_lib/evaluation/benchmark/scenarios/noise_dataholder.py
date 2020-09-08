@@ -28,14 +28,9 @@ from enum import Enum
 
 
 class NoiseMode(Enum):
-    FAV_CONTINUOUS = 1
-    FAV_CONTINUOUS_EXTRA_Z = 2
-    FAV_DISCRETE = 3
-    FAV_DISCRETE_EXTRA_Z = 4
-    FAV_CONTINUOUS_ADD_NOISE = 5
-    FAV_CONTINUOUS_ADD_NOISE_EXTRA_Z = 6
-    FAV_DISCRETE_ADD_NOISE = 7
-    FAV_DISCRETE_ADD_NOISE_EXTRA_Z = 8
+    NOISE_DECAY = 1
+    NOISE_DECAY_EXTRA_Z = 2
+    EXTRA_Z_COLLAPSED_TO_UNCOLLAPSED = 3
 
 
 class NoiseDataHolder(DataHolder):
@@ -49,24 +44,6 @@ class NoiseDataHolder(DataHolder):
         self.noise_mode = noise_mode
         self.n_extra_z = n_extra_z  # TODO : CHANGE TO MAX_N_Z, WITH NONE VALUE IF NO EXTRA CODE
         self.factor_sizes = [val_per_factor]*num_factors
-
-        # parse through noise modes to define scenario configs
-        if noise_mode == NoiseMode.FAV_CONTINUOUS or noise_mode == NoiseMode.FAV_CONTINUOUS_EXTRA_Z or noise_mode == NoiseMode.FAV_CONTINUOUS_ADD_NOISE or noise_mode == NoiseMode.FAV_CONTINUOUS_ADD_NOISE_EXTRA_Z:
-            self.fav_continuous = True
-        else:
-            self.fav_continuous = False
-
-        if noise_mode == NoiseMode.FAV_CONTINUOUS_EXTRA_Z or noise_mode == NoiseMode.FAV_DISCRETE_EXTRA_Z or noise_mode == NoiseMode.FAV_CONTINUOUS_ADD_NOISE_EXTRA_Z or noise_mode == NoiseMode.FAV_DISCRETE_ADD_NOISE_EXTRA_Z:
-            self.extra_z = True
-        else:
-            self.extra_z = False
-
-        if noise_mode == NoiseMode.FAV_DISCRETE_ADD_NOISE or noise_mode == NoiseMode.FAV_DISCRETE_ADD_NOISE_EXTRA_Z or noise_mode == NoiseMode.FAV_CONTINUOUS_ADD_NOISE or noise_mode == NoiseMode.FAV_CONTINUOUS_ADD_NOISE_EXTRA_Z:
-            self.add_noise = True
-            self.replace_noise = False
-        else:
-            self.add_noise = False
-            self.replace_noise = True
 
         discrete_factors, continuous_factors, representations = self._load_data(random_state, K, num_factors, alpha)
         DataHolder.__init__(self, discrete_factors, continuous_factors, representations)
@@ -116,31 +93,36 @@ class NoiseDataHolder(DataHolder):
             continuous_features = []
             for i, d_feature in enumerate(discrete_features):
 
-                if self.fav_continuous:
-                    continuous_vals = random_state.uniform(factor_d_bins[i][d_feature][0],  # min
-                                                           factor_d_bins[i][d_feature][1])  # max
-                else:
-                    continuous_vals = (factor_d_bins[i][d_feature][0] + factor_d_bins[i][d_feature][1])/2
+                continuous_vals = random_state.uniform(factor_d_bins[i][d_feature][0],  # min
+                                                       factor_d_bins[i][d_feature][1])  # max
 
                 continuous_features.append(continuous_vals)
                 pass
 
-            # generate representations which are perfect with noise induction
             for k in range(K):
-                noise = random_state.uniform(-1, 1, size=num_factors)
-
-                if self.replace_noise:
+                # generate representations which are perfect with noise induction
+                if self.noise_mode == NoiseMode.NOISE_DECAY or self.noise_mode == NoiseMode.NOISE_DECAY_EXTRA_Z:
+                    noise = random_state.uniform(-1, 1, size=num_factors)
                     rep = noise*alpha + np.matmul(continuous_features, R)*(1-alpha)
-                elif self.add_noise:
-                    rep = noise*alpha + np.matmul(continuous_features, R)*(1-0.0)
+
+                # Representative codes are always perfect for this scenario
+                elif self.noise_mode == NoiseMode.EXTRA_Z_COLLAPSED_TO_UNCOLLAPSED:
+                    rep = np.matmul(continuous_features, R)
 
                 representations.append(rep)
                 continuous_factors.append(continuous_features)
                 discrete_factors.append(discrete_features)
 
-        if self.extra_z:
+        # Amplitude-Fixed Noisy codes
+        if self.noise_mode == NoiseMode.NOISE_DECAY_EXTRA_Z:
             representations = np.asarray(representations)
-            noise = random_state.normal(size=(len(representations), self.n_extra_z))
+            noise = random_state.uniform(-1, 1, size=(len(representations), self.n_extra_z))
+            representations = np.concatenate((representations, noise), axis=1)
+
+        # Codes go from representing nothing, to full-strength noise which could potentially represent an unaccounted factor.
+        elif self.noise_mode == NoiseMode.EXTRA_Z_COLLAPSED_TO_UNCOLLAPSED:
+            representations = np.asarray(representations)
+            noise = random_state.uniform(-1, 1, size=(len(representations), self.n_extra_z))*alpha
             representations = np.concatenate((representations, noise), axis=1)
 
         return np.array(discrete_factors), np.array(continuous_factors), np.array(representations)

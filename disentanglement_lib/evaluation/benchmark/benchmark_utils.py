@@ -9,7 +9,7 @@ import copy
 from disentanglement_lib.config.benchmark.scenarios.bindings import Metrics
 
 
-def get_names(f_key):
+def get_names(f_key, mode=""):
     if f_key == Metrics.BVAE:
         names = ["BVAE_eval_accuracy"]  # , "BVAE_train_accuracy"]
     elif f_key == Metrics.RFVAE:
@@ -39,7 +39,10 @@ def get_names(f_key):
     elif f_key == Metrics.SAP_CONTINUOUS:
         names = ["SAP_continuous"]
     elif f_key == Metrics.IRS:
-        names = ["IRS"]
+        if mode == "noise":
+            names = ["IRS", "IRS_disentanglement_scores"]
+        else:
+            names = ["IRS"]
     elif f_key == Metrics.WDG:
         names = ["WDG_score"]
     return names

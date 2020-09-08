@@ -13,27 +13,28 @@ import os
 
 
 
-path = "./pickled_results/mp/2020-08-31"
+#path = "./pickled_results/"
+path = "./pickled_results"
 file_list = os.listdir(path)
 
 for file in file_list:
     filepath = os.path.join(path, file)
-    # open a file, where you stored the pickled data
-    file = open(filepath, 'rb')
+    if os.path.isfile(filepath):
+        # open a file, where you stored the pickled data
+        file = open(filepath, 'rb')
 
-    # dump information to that file
-    [_mode, all_results] = pickle.load(file)
+        # dump information to that file
+        [_mode, all_results] = pickle.load(file)
 
-    if _mode in NoiseMode:
-        noise_make_graph(all_results, 3, 10, _mode)
-    elif _mode in NonlinearMode:
-        nl_make_graph(all_results, 3, 10, _mode)
-    elif _mode in RotationMode:
-        rotate_graph(all_results, 3, 10, _mode)
-    elif _mode in ModCompactMode:
-        mc_make_graph(all_results, 3, 10, _mode)
+        if _mode in NoiseMode:
+            noise_make_graph(all_results, 3, 10, _mode)
+        elif _mode in NonlinearMode:
+            nl_make_graph(all_results, 3, 10, _mode)
+        elif _mode in RotationMode:
+            rotate_graph(all_results, 3, 10, _mode)
+        elif _mode in ModCompactMode:
+            mc_make_graph(all_results, 3, 10, _mode)
 
-
-    # close the file
-    file.close()
+        # close the file
+        file.close()
 

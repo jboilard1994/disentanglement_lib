@@ -36,9 +36,9 @@ def compute_factor_vae(dataholder,
                        batch_size=gin.REQUIRED,
                        num_train=gin.REQUIRED,
                        num_eval=gin.REQUIRED):
-  """Computes the FactorVAE disentanglement metric.
+    """Computes the FactorVAE disentanglement metric.
 
-  Args:
+    Args:
     ground_truth_data: GroundTruthData to be sampled from.
     representation_function: Function that takes observations as input and
       outputs a dim_representation sized representation for each observation.
@@ -49,78 +49,77 @@ def compute_factor_vae(dataholder,
     num_eval: Number of points used for evaluation.
     num_variance_estimate: Number of points used to estimate global variances.
 
-  Returns:
+    Returns:
     Dictionary with scores:
       train_accuracy: Accuracy on training set.
       eval_accuracy: Accuracy on evaluation set.
-  """
-  del artifact_dir
-  logging.info("Computing global variances to standardise.")
-  global_variances = _compute_variances(dataholder)
-  
-  active_dims = _prune_dims(global_variances)
-  scores_dict = {}
+    """
+    del artifact_dir
+    logging.info("Computing global variances to standardise.")
+    global_variances = _compute_variances(dataholder)
 
-  if not active_dims.any():
-    scores_dict["train_accuracy"] = 0.
-    scores_dict["eval_accuracy"] = 0.
-    scores_dict["num_active_dims"] = 0
+    active_dims = _prune_dims(global_variances)
+    scores_dict = {}
+
+    if not active_dims.any():
+        scores_dict["train_accuracy"] = 0.
+        scores_dict["eval_accuracy"] = 0.
+        scores_dict["num_active_dims"] = 0
+        return scores_dict
+
+    logging.info("Generating training set.")
+    training_votes = _generate_training_batch(dataholder,
+                                              batch_size,
+                                              num_train, random_state,
+                                              global_variances, active_dims)
+
+    classifier = np.argmax(training_votes, axis=0)
+    other_index = np.arange(training_votes.shape[1])
+
+    logging.info("Evaluate training set accuracy.")
+    train_accuracy = np.sum(training_votes[classifier, other_index]) * 1. / np.sum(training_votes)
+    logging.info("Training set accuracy: %.2g", train_accuracy)
+
+    logging.info("Generating evaluation set.")
+    eval_votes = _generate_training_batch(dataholder, batch_size,
+                                          num_eval, random_state,
+                                          global_variances, active_dims)
+
+    logging.info("Evaluate evaluation set accuracy.")
+    eval_accuracy = np.sum(eval_votes[classifier, other_index]) * 1. / np.sum(eval_votes)
+
+    logging.info("Evaluation set accuracy: %.2g", eval_accuracy)
+    scores_dict["FVAE_train_accuracy"] = train_accuracy
+    scores_dict["FVAE_eval_accuracy"] = eval_accuracy
+    scores_dict["num_active_dims"] = len(active_dims)
     return scores_dict
-
-  logging.info("Generating training set.")
-  training_votes = _generate_training_batch(dataholder,
-                                            batch_size,
-                                            num_train, random_state,
-                                            global_variances, active_dims)
-  
-  classifier = np.argmax(training_votes, axis=0)
-  other_index = np.arange(training_votes.shape[1])
-
-  logging.info("Evaluate training set accuracy.")
-  train_accuracy = np.sum(
-      training_votes[classifier, other_index]) * 1. / np.sum(training_votes)
-  logging.info("Training set accuracy: %.2g", train_accuracy)
-
-  logging.info("Generating evaluation set.")
-  eval_votes = _generate_training_batch(dataholder, batch_size,
-                                        num_eval, random_state,
-                                        global_variances, active_dims)
-
-  logging.info("Evaluate evaluation set accuracy.")
-  eval_accuracy = np.sum(eval_votes[classifier,
-                                    other_index]) * 1. / np.sum(eval_votes)
-  logging.info("Evaluation set accuracy: %.2g", eval_accuracy)
-  scores_dict["FVAE_train_accuracy"] = train_accuracy
-  scores_dict["FVAE_eval_accuracy"] = eval_accuracy
-  scores_dict["num_active_dims"] = len(active_dims)
-  return scores_dict
 
 
 @gin.configurable("prune_dims", blacklist=["variances"])
 def _prune_dims(variances, threshold=0.):
-  """Mask for dimensions collapsed to the prior."""
-  scale_z = np.sqrt(variances)
-  return scale_z >= threshold
+    """Mask for dimensions collapsed to the prior."""
+    scale_z = np.sqrt(variances)
+    return scale_z >= threshold
 
 
 def _compute_variances(dataholder):
-  """Computes the variance for each dimension of the representation.
+    """Computes the variance for each dimension of the representation.
 
-  Args:
+    Args:
     ground_truth_data: GroundTruthData to be sampled from.
-  Returns:
+    Returns:
     Vector with the variance of each dimension.
-  """
-  representations = dataholder.embed_codes
-  return np.var(representations, axis=0, ddof=1)
+    """
+    representations = dataholder.embed_codes
+    return np.var(representations, axis=0, ddof=1)
 
 
 def _generate_training_sample(dataholder,
                               batch_size, random_state, global_variances,
                               active_dims):
-  """Sample a single training sample based on a mini-batch of ground-truth data.
+    """Sample a single training sample based on a mini-batch of ground-truth data.
 
-  Args:
+    Args:
     ground_truth_data: GroundTruthData to be sampled from.
     representation_function: Function that takes observation as input and
       outputs a representation.
@@ -130,49 +129,49 @@ def _generate_training_sample(dataholder,
       representation.
     active_dims: Indexes of active dimensions.
 
-  Returns:
+    Returns:
     factor_index: Index of factor coordinate to be used.
     argmin: Index of representation coordinate with the least variance.
-  """
-  factors = []
-  observationIds = []
-  
-  # Select random coordinate to keep fixed.
-  index_lock, possible_lock_vals = dataholder.sampling.sample_possible_locking(batch_size, random_state, mode="fvae")
-  
-  # Sample two mini batches of latent variables with same values at locked factor.
-  factor, observationId = dataholder.sample_factors_with_locking_possibilities(1, random_state, index_lock, possible_lock_vals)
-  factors.append(factor[0])
-  observationIds.append(observationId[0])
-  
-  for i in range(batch_size-1):
-      factor2, observationId2 = dataholder.sample_with_locked_factors(random_state, index_lock, factor)
-      factors.append(factor2[0])
-      observationIds.append(observationId2[0])
-      
-  factors = np.asarray(factors)
-  observationIds = np.asarray(observationIds)
-  
-  # Obtain the representations.
-  representations = np.take(dataholder.embed_codes, observationIds, axis=0)
-  
-  #Get local variances, arg min of weighted local variance is a majority vote classifier training point
-  local_variances = np.var(representations, axis=0, ddof=1)
-  weighted_local_variances = local_variances/ global_variances  
-  for i, weighted_var in enumerate(weighted_local_variances):
-      if active_dims[i] == False:
-          weighted_local_variances[i] = np.finfo(float).max
-  
-  argmin = np.argmin(weighted_local_variances)
-  return index_lock, argmin
+    """
+    factors = []
+    observationIds = []
+
+    # Select random coordinate to keep fixed.
+    index_lock, possible_lock_vals = dataholder.sampling.sample_possible_locking(batch_size, random_state, mode="fvae")
+
+    # Sample two mini batches of latent variables with same values at locked factor.
+    factor, observationId = dataholder.sample_factors_with_locking_possibilities(1, random_state, index_lock, possible_lock_vals)
+    factors.append(factor[0])
+    observationIds.append(observationId[0])
+
+    for i in range(batch_size-1):
+        factor2, observationId2 = dataholder.sample_with_locked_factors(random_state, index_lock, factor)
+        factors.append(factor2[0])
+        observationIds.append(observationId2[0])
+
+    factors = np.asarray(factors)
+    observationIds = np.asarray(observationIds)
+
+    # Obtain the representations.
+    representations = np.take(dataholder.embed_codes, observationIds, axis=0)
+
+    #Get local variances, arg min of weighted local variance is a majority vote classifier training point
+    local_variances = np.var(representations, axis=0, ddof=1)
+    weighted_local_variances = local_variances/ global_variances
+    for i, weighted_var in enumerate(weighted_local_variances):
+        if active_dims[i] == False:
+            weighted_local_variances[i] = np.finfo(float).max
+
+    argmin = np.argmin(weighted_local_variances)
+    return index_lock, argmin
 
 
 def _generate_training_batch(dataholder,
                              batch_size, num_points, random_state,
                              global_variances, active_dims):
-  """Sample a set of training samples based on a batch of ground-truth data.
+    """Sample a set of training samples based on a batch of ground-truth data.
 
-  Args:
+    Args:
     ground_truth_data: GroundTruthData to be sampled from.
     representation_function: Function that takes observations as input and
       outputs a dim_representation sized representation for each observation.
@@ -183,15 +182,14 @@ def _generate_training_batch(dataholder,
       representation.
     active_dims: Indexes of active dimensions.
 
-  Returns:
+    Returns:
     (num_factors, dim_representation)-sized numpy array with votes.
-  """
-  votes = np.zeros((dataholder.num_factors, global_variances.shape[0]),
-                   dtype=np.int64)
-  for _ in range(num_points):
-    factor_index, argmin = _generate_training_sample(dataholder,
-                                                     batch_size, random_state,
-                                                     global_variances,
-                                                     active_dims)
-    votes[factor_index, argmin] += 1
-  return votes
+    """
+    votes = np.zeros((dataholder.num_factors, global_variances.shape[0]), dtype=np.int64)
+    for _ in range(num_points):
+        factor_index, argmin = _generate_training_sample(dataholder,
+                                                         batch_size, random_state,
+                                                         global_variances,
+                                                         active_dims)
+        votes[factor_index, argmin] += 1
+    return votes

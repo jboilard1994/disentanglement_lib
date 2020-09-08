@@ -72,7 +72,7 @@ def make_violin_plot(alpha_dict, metric_names, num_factors, val_per_factor, alph
         plt.xlabel("Noise-signal ratio")
         plt.ylabel(m_name)
         x1, x2, y1, y2 = plt.axis()
-        plt.axis((x1, x2, 0, 1))
+        plt.axis((x1, x2, 0, 1.01))
         plt.savefig('figs/{}/{}_{}'.format(str(mod_compact_mode), m_name, title_str), bbox_inches='tight')
         plt.close()
 

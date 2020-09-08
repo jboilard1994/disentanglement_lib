@@ -29,12 +29,12 @@ import gin.tf
     blacklist=["dataholder", "random_state",
                "artifact_dir"])
 def compute_jemmig(dataholder,
-                random_state,
-                artifact_dir=None,
-                num_train=gin.REQUIRED):
-  """Computes the mutual information gap.
+                   random_state,
+                   artifact_dir=None,
+                   num_train=gin.REQUIRED):
+    """Computes the mutual information gap.
 
-  Args:
+    Args:
     ground_truth_data: GroundTruthData to be sampled from.
     representation_function: Function that takes observations as input and
       outputs a dim_representation sized representation for each observation.
@@ -43,47 +43,43 @@ def compute_jemmig(dataholder,
     num_train: Number of points used for training.
     batch_size: Batch size for sampling.
 
-  Returns:
+    Returns:
     Dict with average mutual information gap.
-  """
-  del artifact_dir
-  logging.info("Generating training set.")
-  mus_train, ys_train = utils.generate_batch_factor_code(
-      dataholder, num_train,
-      random_state, num_train)
-  assert mus_train.shape[1] == num_train
-  return _compute_jemmig(mus_train, ys_train)
+    """
+    del artifact_dir
+    logging.info("Generating training set.")
+    mus_train, ys_train = utils.generate_batch_factor_code(dataholder, num_train, random_state, num_train)
+    assert mus_train.shape[1] == num_train
+    return _compute_jemmig(mus_train, ys_train)
 
 
 def _compute_jemmig(mus_train, ys_train):
-  """Computes score based on both training and testing codes and factors."""
-  score_dict = {}
-  discretized_mus, bins = utils.make_discretizer(mus_train)
-  n_bins = np.max(discretized_mus) +1
-  
-  m = utils.discrete_mutual_info(discretized_mus, ys_train)
-  
-  assert m.shape[0] == mus_train.shape[0]
-  assert m.shape[1] == ys_train.shape[0]
-  # m is [num_latents, num_factors]
-  
-  entropy_ys = utils.discrete_entropy(ys_train)
-  entropy_zs = utils.discrete_entropy(discretized_mus)
-  entropy_zs_max = utils.discrete_entropy(np.arange(n_bins, dtype=np.int32).reshape((1,-1)))
-  sorted_m = np.sort(m, axis=0)[::-1]
-  
-  unnormalized_results = np.zeros((ys_train.shape[0],))
-  normalized_results = np.zeros((ys_train.shape[0],))
-  for i, yz_mi in enumerate(m.T):
-      argmax_z = np.argmax(yz_mi)
-      joint_entropy = utils.discrete_joint_entropy(discretized_mus[argmax_z,:], ys_train[i,:])
-      unnormalized_results[i] = joint_entropy - sorted_m[0, i] + sorted_m[1, i]
-      normalized_results[i] = (entropy_zs[argmax_z] + entropy_ys[i] - 2*sorted_m[0, i] + sorted_m[1, i])/(entropy_zs_max + entropy_ys[i]) 
-      pass
-  
-  score_dict["JEMMIG_score"] = np.mean(unnormalized_results)
-  score_dict["NORM_JEMMIG_score"] = np.mean(normalized_results)
-  
-  return score_dict
+    """Computes score based on both training and testing codes and factors."""
+    score_dict = {}
+    discretized_mus, bins = utils.make_discretizer(mus_train)
+    n_bins = np.max(discretized_mus) +1
 
+    m = utils.discrete_mutual_info(discretized_mus, ys_train)
 
+    assert m.shape[0] == mus_train.shape[0]
+    assert m.shape[1] == ys_train.shape[0]
+    # m is [num_latents, num_factors]
+
+    entropy_ys = utils.discrete_entropy(ys_train)
+    entropy_zs = utils.discrete_entropy(discretized_mus)
+    entropy_zs_max = utils.discrete_entropy(np.arange(n_bins, dtype=np.int32).reshape((1,-1)))
+    sorted_m = np.sort(m, axis=0)[::-1]
+
+    unnormalized_results = np.zeros((ys_train.shape[0],))
+    normalized_results = np.zeros((ys_train.shape[0],))
+    for i, yz_mi in enumerate(m.T):
+        argmax_z = np.argmax(yz_mi)
+        joint_entropy = utils.discrete_joint_entropy(discretized_mus[argmax_z,:], ys_train[i,:])
+        unnormalized_results[i] = joint_entropy - sorted_m[0, i] + sorted_m[1, i]
+        normalized_results[i] = np.abs((entropy_zs[argmax_z] + entropy_ys[i] - 2*sorted_m[0, i] + sorted_m[1, i])/(entropy_zs_max + entropy_ys[i]) - 1)
+        pass
+
+    score_dict["JEMMIG_score"] = np.mean(unnormalized_results)
+    score_dict["NORM_JEMMIG_score"] = np.mean(normalized_results)
+
+    return score_dict

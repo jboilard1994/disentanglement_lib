@@ -32,9 +32,9 @@ def compute_mig(dataholder,
                 random_state,
                 artifact_dir=None,
                 num_train=gin.REQUIRED):
-  """Computes the mutual information gap.
+    """Computes the mutual information gap.
 
-  Args:
+    Args:
     ground_truth_data: GroundTruthData to be sampled from.
     representation_function: Function that takes observations as input and
       outputs a dim_representation sized representation for each observation.
@@ -43,32 +43,29 @@ def compute_mig(dataholder,
     num_train: Number of points used for training.
     batch_size: Batch size for sampling.
 
-  Returns:
+    Returns:
     Dict with average mutual information gap.
-  """
-  del artifact_dir
-  logging.info("Generating training set.")
-  mus_train, ys_train = utils.generate_batch_factor_code(
-      dataholder, num_train,
-      random_state, num_train)
-  assert mus_train.shape[1] == num_train
-  return _compute_mig(mus_train, ys_train)
+    """
+    del artifact_dir
+    logging.info("Generating training set.")
+    mus_train, ys_train = utils.generate_batch_factor_code(dataholder, num_train, random_state, num_train)
+    assert mus_train.shape[1] == num_train
+    return _compute_mig(mus_train, ys_train)
 
 
 def _compute_mig(mus_train, ys_train):
-  """Computes score based on both training and testing codes and factors."""
-  score_dict = {}
-  discretized_mus, bins = utils.make_discretizer(mus_train)
-  m = utils.discrete_mutual_info(discretized_mus, ys_train)
-  assert m.shape[0] == mus_train.shape[0]
-  assert m.shape[1] == ys_train.shape[0]
-  # m is [num_latents, num_factors]
-  entropy = utils.discrete_entropy(ys_train)
-  sorted_m = np.sort(m, axis=0)[::-1]
-  
-  score_dict["MIG_score"] = np.mean(
-      np.divide(sorted_m[0, :] - sorted_m[1, :], entropy[:]))
-  score_dict["MIG_unnormalized"] = np.mean(sorted_m[0, :] - sorted_m[1, :])
-  return score_dict
+    """Computes score based on both training and testing codes and factors."""
+    score_dict = {}
+    discretized_mus, bins = utils.make_discretizer(mus_train)
+    m = utils.discrete_mutual_info(discretized_mus, ys_train)
+    assert m.shape[0] == mus_train.shape[0]
+    assert m.shape[1] == ys_train.shape[0]
+    # m is [num_latents, num_factors]
+    entropy = utils.discrete_entropy(ys_train)
+    sorted_m = np.sort(m, axis=0)[::-1]
+
+    score_dict["MIG_score"] = np.mean(np.divide(sorted_m[0, :] - sorted_m[1, :], entropy[:]))
+    score_dict["MIG_unnormalized"] = np.mean(sorted_m[0, :] - sorted_m[1, :])
+    return score_dict
 
 
