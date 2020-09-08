@@ -97,6 +97,8 @@ def make_violin_plot(violin_data, labels, dict_, metric_names, num_factors, val_
             "Non-Linear All Metrics : {}; {} Factors / {} values each".format(str(nonlinear_mode), num_factors, val_per_factor))
         plt.ylabel("Metric Score")
 
+        x1, x2, y1, y2 = plt.axis()
+        plt.axis((x1, x2, 0, 1))
         plt.legend(*zip(*legend_labels), loc='center left', bbox_to_anchor=(1, 0.5))
         x_ticks = ["({})".format(n) for n in range(0, i)]
         plt.xticks(range(1, i+1), x_ticks)
