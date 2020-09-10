@@ -116,7 +116,9 @@ def make_graphs(results_dict, num_factors, val_per_factor, nonlinear_mode):
 
     table_df = pd.DataFrame(data=None)
     legend_labels = []
+    legend_labels_extra = []
     violin_data = []
+    violin_data_extra = []
     means = []
     names = []
     i = -1
@@ -161,24 +163,26 @@ def make_graphs(results_dict, num_factors, val_per_factor, nonlinear_mode):
             table_df = table_df.append(df)
 
         else:
-            fig, legend_labels = make_violin_plot(violin_data=violin_data,
-                                                  labels=legend_labels,
-                                                  dict_=dict_,
-                                                  metric_names=metric_names,
-                                                  num_factors=num_factors,
-                                                  val_per_factor=val_per_factor,
-                                                  nonlinear_mode=nonlinear_mode,
-                                                  orig_indexes=[],
-                                                  index_names=[],
-                                                  final_metric=(not i < len(results_dict) - 1))  # Save graph indicator
+            if (f_key == Metrics.DCIMIG or f_key == Metrics.IRS or f_key == Metrics.JEMMIG or
+                f_key == Metrics.MIG or f_key == Metrics.MIG_SUP or f_key == Metrics.MODEX or
+                f_key == Metrics.WDG):
 
-            row_data, pd_index, means, all_stds = get_table_meanstd_info(dict_,
-                                                                         metric_names,
-                                                                         num_factors,
-                                                                         val_per_factor)
-            # All functions append the mean-std table.
-            df = pd.DataFrame(data=row_data, index=pd_index)
-            table_df = table_df.append(df)
+                # normal plotting
+                make_violin_plot(violin_data=violin_data, labels=legend_labels, dict_=dict_, metric_names=metric_names, num_factors=num_factors,
+                                 val_per_factor=val_per_factor, nonlinear_mode=nonlinear_mode, orig_indexes=[], index_names=[],
+                                 final_metric=(not i < len(results_dict) - 1))  # Save graph indicator
+
+                #Make special percentile discretization graph.
+                make_violin_plot(violin_data=violin_data_extra, labels=legend_labels_extra, dict_=dict_, metric_names=metric_names, num_factors=num_factors,
+                                 val_per_factor=val_per_factor, nonlinear_mode=nonlinear_mode, orig_indexes=[], index_names=[],
+                                 final_metric=(not i < len(results_dict) - 1))  # Save graph indicator
+            else:
+                # normal plotting
+                make_violin_plot(violin_data=violin_data, labels=legend_labels, dict_=dict_, metric_names=metric_names,
+                                 num_factors=num_factors,
+                                 val_per_factor=val_per_factor, nonlinear_mode=nonlinear_mode, orig_indexes=[],
+                                 index_names=[],
+                                 final_metric=(not i < len(results_dict) - 1))  # Save graph indicator
 
     table_df.to_csv("figs/{}/big_table.csv".format(str(nonlinear_mode)))
     pass

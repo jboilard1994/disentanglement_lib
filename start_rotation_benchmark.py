@@ -47,8 +47,8 @@ rotation_modes = [RotationMode.CONTINUOUS]
 
 if __name__ == "__main__": 
     process_mode = "mp"  # debug or mp
-    num_factors = 2
-    val_per_factor = 50
+    num_factors = 4
+    val_per_factor = 10
     n_seeds = 20
 
     for rotation_mode in rotation_modes:

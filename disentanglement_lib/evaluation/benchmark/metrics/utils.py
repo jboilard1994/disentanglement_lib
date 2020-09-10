@@ -164,12 +164,30 @@ def make_discretizer(target, num_bins=gin.REQUIRED,
 
 
 @gin.configurable("histogram_discretizer", blacklist=["target"])
-def _histogram_discretize(target, num_bins=gin.REQUIRED):
+def _histogram_discretize(target, num_bins, distribution=None):
     """Discretization based on histograms."""
     discretized = np.zeros_like(target, dtype=np.int32)
     all_bins = []
     for i in range(target.shape[0]):
         counts, bins = np.histogram(target[i, :], num_bins)
+        discretized[i, :] = np.digitize(target[i, :], bins[:-1]) - 1
+        all_bins.append(bins)
+    return discretized, all_bins
+
+
+@gin.configurable("percentile_discretizer", blacklist=["target"])
+def _percentile_histogram_discretize(target, num_bins, cum_distributions=None):
+    """Discretization based on histograms."""
+    discretized = np.zeros_like(target, dtype=np.int32)
+    all_bins = []
+
+    for i in range(target.shape[0]):
+        percentiles = cum_distributions[i]*100
+
+        if percentiles[0] < 0: percentiles[0] = 0
+        if percentiles[-1] > 100: percentiles[-1] = 100
+
+        bins = np.percentile(target, percentiles)
         discretized[i, :] = np.digitize(target[i, :], bins[:-1]) - 1
         all_bins.append(bins)
     return discretized, all_bins

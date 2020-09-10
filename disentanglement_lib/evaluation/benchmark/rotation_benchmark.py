@@ -72,8 +72,6 @@ def test_metric(config_class, num_factors, val_per_factor, index_dict, queue, ro
                                                             num_factors=num_factors,
                                                             val_per_factor=val_per_factor)
 
-
-
         # Get scores and save in matrix
         score = metric_fn(dataholder, random_state)
         results = add_to_dict(results, extra_param_id, score, 0)
@@ -152,7 +150,6 @@ def rotation_scenario_main(config_fn, num_factors, val_per_factor, rotation_mode
     processes = []
     result_dicts_list = []
     q = mp.Queue()
-     
 
     for theta in thetas:  # set noise strength
 

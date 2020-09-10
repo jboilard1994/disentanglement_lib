@@ -85,6 +85,7 @@ class RotationDataHolder(DataHolder):
         representations = []
         discrete_factors = []
 
+        # sample discrete bins and continuous values.
         for discrete_features in factor_atoms:
             # Generate a continuous feature from binning possible range.
             continuous_features = []
@@ -95,13 +96,17 @@ class RotationDataHolder(DataHolder):
 
                 continuous_features.append(continuous_vals)
                 pass
-
-            # do rotation
-            rep = np.matmul(continuous_features, R)
-            rot_rep = np.matmul(rep, rotation_matrix)
-
-            representations.append(rot_rep)
             continuous_factors.append(continuous_features)
             discrete_factors.append(discrete_features)
+
+        # Representation is a pair-wise rotation of continuous factors.
+        for continuous_features in continuous_factors:
+            # do rotation
+            n_pairs = np.floor(num_factors/2).astype(np.int32)
+            rot_rep = np.matmul(continuous_features, R)
+
+            for i_pair in range(n_pairs):
+                rot_rep[i_pair*2:i_pair*2 + 2] = np.matmul(rot_rep[i_pair*2 : i_pair*2 +2], rotation_matrix)
+            representations.append(rot_rep)
 
         return np.array(discrete_factors), np.array(continuous_factors), np.array(representations)

@@ -6,6 +6,7 @@ import os
 from disentanglement_lib.evaluation.benchmark.sampling.sampling_factor_fixed import SingleFactorFixedSampling
 from disentanglement_lib.evaluation.benchmark.sampling.sampling_factor_varied import SingleFactorVariedSampling
 from disentanglement_lib.evaluation.benchmark.sampling.generic_sampling import GenericSampling
+from disentanglement_lib.evaluation.benchmark.benchmark_utils import _get_discrete_cumulative_distributions
 
 @gin.configurable("dataholder")
 class DataHolder:
@@ -29,7 +30,11 @@ class DataHolder:
             self.sampling = SingleFactorVariedSampling(self.factor_sizes, self.factors_indices, self.factors, list(range(len(self.factors))))
         else:
             self.sampling = GenericSampling(self.factor_sizes, self.factors_indices, self.factors, list(range(len(self.factors))))
-   
+
+        self.cumulative_dist = _get_discrete_cumulative_distributions(discrete_factors)
+        pass
+
+
     @property
     def num_factors(self):
         """ @author: jboilard

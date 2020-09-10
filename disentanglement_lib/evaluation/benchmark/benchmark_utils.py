@@ -7,6 +7,7 @@ Created on Fri Aug 14 11:28:11 2020
 
 import copy
 from disentanglement_lib.config.benchmark.scenarios.bindings import Metrics
+import numpy as np
 
 
 def get_names(f_key, mode=""):
@@ -59,6 +60,24 @@ def get_names(f_key, mode=""):
 #              for num_eval in num_evals:
 #                     for batch_size in batch_sizes:
 #         pass
+
+
+def _get_discrete_cumulative_distributions(discrete_targets):
+    cum_dists = []
+    for i in range(discrete_targets.shape[1]):
+        # get distributions first
+        counts = np.bincount(discrete_targets[:, i])
+        dist = counts/np.sum(counts)
+
+        # then get cumulative.
+        cum_dist = np.zeros_like(dist)
+        for b_i in range(len(dist)):
+            cum_dist[b_i] = np.sum(dist[:b_i + 1])
+
+        cum_dist = np.insert(cum_dist, 0, 0)
+        cum_dists.append(cum_dist)
+
+    return cum_dists
 
 
 def init_dict(d, all_params, depth):
