@@ -77,11 +77,12 @@ class ConfigRFVAE(GenericConfigRFVAE):
     def get_extra_params(self):
         batch_size = 8
         num_train_evals = [50, 300, 500]
+        param_names = ["Batch Size", "Num generated data points"]
         extra_params = [[batch_size], num_train_evals]
         param_ids = []
         for num_train_eval in num_train_evals:
             param_ids.append([batch_size, num_train_eval])
-        return param_ids, extra_params
+        return param_ids, extra_params, param_names
     
 
 class ConfigFVAE(GenericConfigFVAE):
@@ -91,11 +92,12 @@ class ConfigFVAE(GenericConfigFVAE):
     def get_extra_params(self):
         batch_size = 16
         num_train_evals = [50, 300, 500]
+        param_names = ["Batch Size", "Num generated data points"]
         extra_params = [[batch_size], num_train_evals]
         param_ids = []
         for num_train_eval in num_train_evals:
             param_ids.append([batch_size, num_train_eval])
-        return param_ids, extra_params
+        return param_ids, extra_params, param_names
 
 
 class ConfigBVAE(GenericConfigBVAE):
@@ -105,11 +107,12 @@ class ConfigBVAE(GenericConfigBVAE):
     def get_extra_params(self):
         batch_size = 16
         num_train_evals = [50, 300, 500]
+        param_names = ["Batch Size", "Num generated data points"]
         extra_params = [[batch_size], num_train_evals]
         param_ids = []
         for num_train_eval in num_train_evals:
             param_ids.append([batch_size, num_train_eval])
-        return param_ids, extra_params
+        return param_ids, extra_params, param_names
 
 
 class ConfigDCIRFClass(GenericConfigDCIRFClass):

@@ -56,7 +56,7 @@ def test_metric(config_class, num_factors, val_per_factor, index_dict, queue, ro
     metric_fn = config_fn.get_metric_fn_id()[0]
 
     configs = config_fn.get_gin_configs(n_samples, val_per_factor)
-    param_ids, all_params = config_fn.get_extra_params() 
+    param_ids, all_params, param_names = config_fn.get_extra_params()
     results = init_dict({}, all_params, depth=0)
     
     for i, config in enumerate(configs):

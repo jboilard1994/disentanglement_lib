@@ -53,6 +53,12 @@ class ConfigIRS(GenericConfigIRS):
     def __init__(self):
         pass
 
+    def get_extra_params(self):
+        extra_params = [["@histogram_discretizer", "@percentile_discretizer"]]
+        param_ids = [["@histogram_discretizer"], ["@percentile_discretizer"]]
+        param_names = [["Discretizer Function"]]
+        return param_ids, extra_params, param_names
+
 
 class ConfigSAPDiscrete(GenericConfigSAPDiscrete):
     def __init__(self):
@@ -67,6 +73,12 @@ class ConfigSAPContinuous(GenericConfigSAPContinuous):
 class ConfigModex(GenericConfigModex):
     def __init__(self):
         pass
+
+    def get_extra_params(self):
+        extra_params = [["@histogram_discretizer", "@percentile_discretizer"]]
+        param_ids = [["@histogram_discretizer"], ["@percentile_discretizer"]]
+        param_names = [["Discretizer Function"]]
+        return param_ids, extra_params, param_names
 
 
 class ConfigRFVAE(GenericConfigRFVAE):
@@ -108,24 +120,54 @@ class ConfigDCIMIG(GenericConfigDCIMIG):
     def __init__(self):
         pass
 
+    def get_extra_params(self):
+        extra_params = [["@histogram_discretizer", "@percentile_discretizer"]]
+        param_ids = [["@histogram_discretizer"], ["@percentile_discretizer"]]
+        param_names = [["Discretizer Function"]]
+        return param_ids, extra_params, param_names
+
 
 class ConfigMIG(GenericConfigMIG):
     def __init__(self):
         pass
+
+    def get_extra_params(self):
+        extra_params = [["@histogram_discretizer", "@percentile_discretizer"]]
+        param_ids = [["@histogram_discretizer"], ["@percentile_discretizer"]]
+        param_names = [["Discretizer Function"]]
+        return param_ids, extra_params, param_names
 
 
 class ConfigWDG(GenericConfigWDG):
     def __init__(self):
         pass
 
+    def get_extra_params(self):
+        extra_params = [["@histogram_discretizer", "@percentile_discretizer"]]
+        param_ids = [["@histogram_discretizer"], ["@percentile_discretizer"]]
+        param_names = [["Discretizer Function"]]
+        return param_ids, extra_params, param_names
+
 
 class ConfigJEMMIG(GenericConfigJEMMIG):
     def __init__(self):
         pass
 
+    def get_extra_params(self):
+        extra_params = [["@histogram_discretizer", "@percentile_discretizer"]]
+        param_ids = [["@histogram_discretizer"], ["@percentile_discretizer"]]
+        param_names = [["Discretizer Function"]]
+        return param_ids, extra_params, param_names
+
 
 class ConfigMIGSUP(GenericConfigMIGSUP):
     def __init__(self):
         pass
+
+    def get_extra_params(self):
+        extra_params = [["@histogram_discretizer", "@percentile_discretizer"]]
+        param_ids = [["@histogram_discretizer"], ["@percentile_discretizer"]]
+        param_names = [["Discretizer Function"]]
+        return param_ids, extra_params, param_names
 
 

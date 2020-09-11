@@ -51,14 +51,14 @@ def test_metric(config_class, num_factors, val_per_factor, index_dict, queue, no
     seed = index_dict["seed"]
     f = index_dict["f"]
 
-    config_fn = config_class()
+    config_ = config_class()
 
     # get params
     n_samples = noise_dataholder.NoiseDataHolder.get_expected_len(num_factors, val_per_factor, K)
-    metric_fn = config_fn.get_metric_fn_id()[0]
+    metric_fn = config_.get_metric_fn_id()[0]
 
-    configs = config_fn.get_gin_configs(n_samples, val_per_factor)
-    param_ids, all_params = config_fn.get_extra_params()
+    configs = config_.get_gin_configs(n_samples, val_per_factor)
+    param_ids, all_params, param_names = config_.get_extra_params()
     results = init_dict({}, all_params, depth=0)
     
     for i, config in enumerate(configs):
@@ -82,16 +82,18 @@ def test_metric(config_class, num_factors, val_per_factor, index_dict, queue, no
         results = add_to_dict(results, extra_param_id, score, 0)
         
         gin.clear_config()
-        
+
     return_dict = {"K": K, "alpha": alpha, "seed": seed, "f": f, "result": results}
     queue.put(return_dict)  # Multiprocessing accessible list.
     
     return return_dict
 
 
-def organize_results(result_dicts_list, metric_id):
+def organize_results(result_dicts_list, config_fn):
     """ Organizes input list of result dicts into indexed K, sub-index alpha, sub-sub-index (etc) depending on the metric,
     with final index being the metric name/list of seeded results"""
+
+    metric_id = config_fn.get_metric_fn_id()[1]
 
     # Find all unique values
     Ks = []
@@ -107,12 +109,18 @@ def organize_results(result_dicts_list, metric_id):
     alphas = np.unique(alphas)
     seeds = np.unique(seeds)
 
+    # Extract extra_params
+    config_ = config_fn()
+    param_ids, extra_params, param_names = config_.get_extra_params()
+
     # initialize organized_results
     organized_results = {}
+    organized_results["params"] = [param_ids, extra_params]
+    organized_results["results"] = {}
     for K in Ks:
-        organized_results[K] = {}
+        organized_results["results"][K] = {}
         for alpha in alphas:
-            organized_results[K][alpha] = {}
+            organized_results["results"][K][alpha] = {}
 
     # Fill organized dict!
     for result_dict in result_dicts_list:
@@ -121,35 +129,38 @@ def organize_results(result_dicts_list, metric_id):
         alpha = result_dict['alpha']
         fn_result_dict = result_dict["result"]
 
-        # Bvae and FVAE have common extra parameters to evaluate.
+        if organized_results["results"][K][alpha] == {}:
+            pass
+
+        """"# Bvae and FVAE have common extra parameters to evaluate.
         if metric_id == Metrics.BVAE or metric_id == Metrics.FVAE or metric_id == Metrics.RFVAE:
             # if a dict entry does not exist yet.
-            if organized_results[K][alpha] == {}:
-                for batch_size, num_eval_dict in fn_result_dict.items():
-                    organized_results[K][alpha][batch_size] = {}
+            if organized_results["results"][K][alpha] == {}:
+                for  , num_eval_dict in fn_result_dict.items():
+                    organized_results["results"][K][alpha][batch_size] = {}
 
                     for num_eval, scores_dict in num_eval_dict.items():
-                        organized_results[K][alpha][batch_size][num_eval] = {}
+                        organized_results["results"][K][alpha][batch_size][num_eval] = {}
 
                         for score_name, __ in scores_dict.items():
-                            organized_results[K][alpha][batch_size][num_eval][score_name] = []
+                            organized_results["results"][K][alpha][batch_size][num_eval][score_name] = []
 
             # Fill in the organized dict. append seeded results
             for batch_size, num_eval_dict in fn_result_dict.items():
                 for num_eval, scores_dict in num_eval_dict.items():
                     for score_name, score in scores_dict.items():
-                        organized_results[K][alpha][batch_size][num_eval][score_name].append(score)
+                        organized_results["results"][K][alpha][batch_size][num_eval][score_name].append(score)"""
 
-        # All other metric organize their dictionnary here.
+        """# All other metric organize their dictionnary here.
         else:
             # if a dict entry does not exist yet.
-            if organized_results[K][alpha] == {}:
+            if organized_results["results"][K][alpha] == {}:
                 for key, __ in fn_result_dict.items():
-                    organized_results[K][alpha][key] = []
+                    organized_results["results"][K][alpha][key] = []
 
             # F ill in the organized dict. append seeded results
             for metric_name, value in fn_result_dict.items():
-                organized_results[K][alpha][metric_name].append(value)
+                organized_results["results"][K][alpha][metric_name].append(value)"""
 
     return organized_results
 
@@ -188,4 +199,4 @@ def noise_scenario_main(config_fn, num_factors, val_per_factor, noise_mode, nsee
     if process_mode == "mp": 
         result_dicts_list = manage_processes(processes, q)
     
-    return organize_results(result_dicts_list, config_fn.get_metric_fn_id()[1])
+    return organize_results(result_dicts_list, config_fn)
