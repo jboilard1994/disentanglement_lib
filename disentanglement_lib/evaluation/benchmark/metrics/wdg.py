@@ -53,13 +53,14 @@ def compute_wdg(dataholder,
       dataholder, num_train,
       random_state, num_train)
     assert mus_train.shape[1] == num_train
-    return _compute_wdg(mus_train, ys_train)
+
+    discretized_mus, bins = utils.make_discretizer(mus_train, dataholder.cumulative_dist)
+    return _compute_wdg(discretized_mus, ys_train, bins)
 
 
-def _compute_wdg(mus_train, ys_train):
+def _compute_wdg(discretized_mus, ys_train, bins):
     """Computes score based on both training and testing codes and factors."""
     score_dict = {}
-    discretized_mus, bins = utils.make_discretizer(mus_train)
 
     wd_matrix = get_wasserstein_dependency_matrix(discretized_mus, bins, ys_train)
 

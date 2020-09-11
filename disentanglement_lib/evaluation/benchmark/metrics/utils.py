@@ -157,14 +157,14 @@ def discrete_joint_entropy(z, y):
 
 @gin.configurable(
     "discretizer", blacklist=["target"])
-def make_discretizer(target, num_bins=gin.REQUIRED,
+def make_discretizer(target, cumulative_dist=None, num_bins=gin.REQUIRED,
                      discretizer_fn=gin.REQUIRED):
   """Wrapper that creates discretizers."""
-  return discretizer_fn(target, num_bins)
+  return discretizer_fn(target, num_bins, cumulative_dist)
 
 
 @gin.configurable("histogram_discretizer", blacklist=["target"])
-def _histogram_discretize(target, num_bins, distribution=None):
+def _histogram_discretize(target, num_bins, cumulative_dist):
     """Discretization based on histograms."""
     discretized = np.zeros_like(target, dtype=np.int32)
     all_bins = []
@@ -176,13 +176,13 @@ def _histogram_discretize(target, num_bins, distribution=None):
 
 
 @gin.configurable("percentile_discretizer", blacklist=["target"])
-def _percentile_histogram_discretize(target, num_bins, cum_distributions=None):
+def _percentile_histogram_discretize(target, num_bins, cumulative_dist):
     """Discretization based on histograms."""
     discretized = np.zeros_like(target, dtype=np.int32)
     all_bins = []
 
     for i in range(target.shape[0]):
-        percentiles = cum_distributions[i]*100
+        percentiles = cumulative_dist[i]*100
 
         if percentiles[0] < 0: percentiles[0] = 0
         if percentiles[-1] > 100: percentiles[-1] = 100

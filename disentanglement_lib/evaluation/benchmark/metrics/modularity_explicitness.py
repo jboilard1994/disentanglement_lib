@@ -65,7 +65,7 @@ def compute_modularity_explicitness(dataholder,
     all_ys = np.transpose(dataholder.factors)
 
     #New score
-    discretized_mus, bins0 = utils.make_discretizer(all_mus)
+    discretized_mus, bins0 = utils.make_discretizer(all_mus, dataholder.cumulative_dist)
     mutual_information = utils.discrete_mutual_info(discretized_mus, all_ys)
     # Mutual information should have shape [num_codes, num_factors].
     assert mutual_information.shape[0] == mus_train.shape[0]
@@ -77,12 +77,12 @@ def compute_modularity_explicitness(dataholder,
     # So we get results for whole dataset, train-set, and test set.
 
     #old score 1
-    discretized_mus, bins1 = utils.make_discretizer(mus_train)
+    discretized_mus, bins1 = utils.make_discretizer(mus_train, dataholder.cumulative_dist)
     mutual_information = utils.discrete_mutual_info(discretized_mus, ys_train)
     scores["MODEX_modularity_oldtrain_score"] = modularity(mutual_information)
 
     #old score 2
-    discretized_mus, bins2 = utils.make_discretizer(mus_test)
+    discretized_mus, bins2 = utils.make_discretizer(mus_test, dataholder.cumulative_dist)
     mutual_information = utils.discrete_mutual_info(discretized_mus, ys_test)
     scores["MODEX_modularity_oldtest_score"] = modularity(mutual_information)
 
