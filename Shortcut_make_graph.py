@@ -1,5 +1,5 @@
-from disentanglement_lib.evaluation.benchmark.graphing.non_linear_graphing import make_graphs as nl_make_graph
-from disentanglement_lib.evaluation.benchmark.graphing.noise_graphing import make_graphs as noise_make_graph
+from disentanglement_lib.evaluation.benchmark.graphing import parameter_free_graphing
+from disentanglement_lib.evaluation.benchmark.graphing import alpha_parameterized_graphing
 
 from disentanglement_lib.evaluation.benchmark.scenarios.noise_dataholder import NoiseMode
 from disentanglement_lib.evaluation.benchmark.scenarios.nonlinear_dataholder import NonlinearMode
@@ -25,16 +25,16 @@ for file in file_list:
         [_mode, all_results] = pickle.load(file)
 
         if _mode in NoiseMode:
-            noise_make_graph(all_results, 3, 10, _mode)
+            alpha_parameterized_graphing.make_graphs(all_results, 3, 10, _mode)
         elif _mode in NonlinearMode:
-            nl_make_graph(all_results, 3, 10, _mode)
+            parameter_free_graphing.make_graphs(all_results, 3, 10, _mode)
         elif _mode in RotationMode:
-            noise_make_graph(all_results, 3, 10, _mode)
+            alpha_parameterized_graphing.make_graphs(all_results, 3, 10, _mode)
         elif _mode in ModCompactMode:
             if _mode == ModCompactMode.TEST_MOD_MISSING_CHECK or _mode == ModCompactMode.TEST_COMPACT_MISSING_CHECK:
-                nl_make_graph(all_results, 3, 10, _mode)
+                parameter_free_graphing.make_graphs(all_results, 3, 10, _mode)
             else:
-                noise_make_graph(all_results, 3, 10, _mode)
+                alpha_parameterized_graphing.make_graphs(all_results, 3, 10, _mode)
 
 
         # close the file

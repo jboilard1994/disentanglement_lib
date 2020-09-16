@@ -22,9 +22,9 @@ from disentanglement_lib.config.benchmark.scenarios.nonlinear_bindings import Co
 from disentanglement_lib.config.benchmark.scenarios.nonlinear_bindings import ConfigModex
 from disentanglement_lib.config.benchmark.scenarios.nonlinear_bindings import ConfigWDG
 
-from disentanglement_lib.evaluation.benchmark.nonlinear_benchmark import non_linear_scenario_main
-from disentanglement_lib.evaluation.benchmark.scenarios.nonlinear_dataholder import NonlinearMode
-from disentanglement_lib.evaluation.benchmark.graphing.non_linear_graphing import make_graphs
+from disentanglement_lib.evaluation.benchmark.noise_benchmark import benchmark_main
+from disentanglement_lib.evaluation.benchmark.scenarios.nonlinear_dataholder import NonlinearMode, NonlinearDataHolder
+from disentanglement_lib.evaluation.benchmark.graphing import parameter_free_graphing
 
 
 config_funcs = [ConfigRFVAE,
@@ -57,14 +57,16 @@ if __name__ == "__main__":
         all_results = {}
 
         for f in config_funcs:
-            results_dict = non_linear_scenario_main(f, num_factors=num_factors,
-                                                    val_per_factor=val_per_factor,
-                                                    nonlinear_mode=nonlinear_mode,
-                                                    nseeds=n_seeds,
-                                                    process_mode=process_mode)
+            results_dict = benchmark_main(dataholder_class=NonlinearDataHolder,
+                                          config_fn=f,
+                                          num_factors=num_factors,
+                                          val_per_factor=val_per_factor,
+                                          scenario_mode=nonlinear_mode,
+                                          nseeds=n_seeds,
+                                          process_mode=process_mode)
 
             id_ = f.get_metric_fn_id()[1]
             all_results[id_] = results_dict
 
         pickle.dump([nonlinear_mode, all_results], open("./pickled_results/{}.p".format(str(nonlinear_mode)), "wb"))
-        make_graphs(all_results, num_factors, val_per_factor, nonlinear_mode=nonlinear_mode)
+        parameter_free_graphing.make_graphs(all_results, num_factors, val_per_factor, scenario_mode=nonlinear_mode)

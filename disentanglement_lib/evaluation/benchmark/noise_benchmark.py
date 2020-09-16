@@ -42,7 +42,7 @@ from disentanglement_lib.evaluation.benchmark.benchmark_utils import manage_proc
 from disentanglement_lib.config.benchmark.scenarios.bindings import Metrics
 
 
-def test_metric(dataholder_class, config_class, num_factors, val_per_factor, index_dict, queue, noise_mode):
+def test_metric(dataholder_class, config_class, num_factors, val_per_factor, index_dict, queue, scenario_mode):
     # Get run parameters
     K = index_dict["K"]
     alpha = index_dict["alpha"]
@@ -52,7 +52,7 @@ def test_metric(dataholder_class, config_class, num_factors, val_per_factor, ind
     config_ = config_class()
 
     # get params
-    n_samples = dataholder_class.get_expected_len(num_factors, val_per_factor, K)
+    n_samples = dataholder_class.get_expected_len(num_factors, val_per_factor, K, scenario_mode)
     metric_fn = config_.get_metric_fn_id()[0]
 
     configs = config_.get_gin_configs(n_samples, val_per_factor)
@@ -73,7 +73,7 @@ def test_metric(dataholder_class, config_class, num_factors, val_per_factor, ind
                                       K=K,
                                       num_factors=num_factors,
                                       val_per_factor=val_per_factor,
-                                      noise_mode=noise_mode)
+                                      scenario_mode=scenario_mode)
 
         # Get scores and save in matrix
         score = metric_fn(dataholder, random_state)
@@ -85,20 +85,20 @@ def test_metric(dataholder_class, config_class, num_factors, val_per_factor, ind
     return results
 
 
-def noise_scenario_main(dataholder_class, config_fn, num_factors, val_per_factor, noise_mode, Ks, alphas, nseeds, process_mode="mp"):
+def benchmark_main(dataholder_class, config_fn, num_factors, val_per_factor, scenario_mode, nseeds, alphas=[0], ks=[1], process_mode="mp"):
     # define scenario parameter alpha
     processes = []
     result_dicts_list = []
     q = mp.Queue()
      
-    for K in Ks:
-        for alpha in alphas:  # set noise strength
+    for K in ks:
+        for alpha in alphas:
             
             for seed in range(nseeds):
                 index_dict = {'K': K, 'alpha': alpha, 'seed': seed, 'f': str(config_fn.get_metric_fn_id()[0])}
                 
                 if process_mode == "debug": # allows breakpoint debug.
-                    result_dicts_list.append(test_metric(config_fn, num_factors, val_per_factor, index_dict, q, noise_mode))
+                    result_dicts_list.append(test_metric(config_fn, num_factors, val_per_factor, index_dict, q, scenario_mode))
                     print(result_dicts_list[-1])
                     
                 elif process_mode == "mp": 
@@ -109,8 +109,8 @@ def noise_scenario_main(dataholder_class, config_fn, num_factors, val_per_factor
                                                val_per_factor,
                                                index_dict,
                                                q,
-                                               noise_mode),
-                                         name="Noise1_K={}, alpha={}, seed = {}, fn={}".format(K, alpha, seed, str(config_fn)))
+                                               scenario_mode),
+                                         name="{}_K={}, alpha={}, seed = {}, fn={}".format(str(scenario_mode), K, alpha, seed, str(config_fn)))
                     
                     processes.append(process)
                 

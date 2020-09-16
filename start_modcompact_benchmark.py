@@ -1,4 +1,5 @@
 import warnings
+import numpy as np
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
 from disentanglement_lib.config.benchmark.scenarios.mod_compact_bindings import ConfigDCIRFClass
@@ -20,11 +21,11 @@ from disentanglement_lib.config.benchmark.scenarios.mod_compact_bindings import 
 from disentanglement_lib.config.benchmark.scenarios.mod_compact_bindings import ConfigModex
 from disentanglement_lib.config.benchmark.scenarios.mod_compact_bindings import ConfigWDG
 
-from disentanglement_lib.evaluation.benchmark.mod_compact_benchmark import mod_compact_scenario_main
-from disentanglement_lib.evaluation.benchmark.scenarios.modcompact_dataholder import ModCompactMode
+from disentanglement_lib.evaluation.benchmark.noise_benchmark import benchmark_main
+from disentanglement_lib.evaluation.benchmark.scenarios.modcompact_dataholder import ModCompactMode, ModCompactDataHolder
 
-from disentanglement_lib.evaluation.benchmark.graphing.noise_graphing import make_graphs as alpha_make_graphs
-from disentanglement_lib.evaluation.benchmark.graphing.non_linear_graphing import make_graphs as no_alpha_make_graphs
+from disentanglement_lib.evaluation.benchmark.graphing import alpha_parameterized_graphing
+from disentanglement_lib.evaluation.benchmark.graphing import parameter_free_graphing
 
 
 
@@ -46,13 +47,6 @@ config_funcs = [ConfigIRS,
                 ConfigWDG,
                 ConfigJEMMIG,
                 ConfigMIGSUP]
-TEST_BLUR = 1
-TEST_CODE_FACTOR_DECAY = 2
-TEST_MOD_MISSING_CHECK = 3
-TEST_COMPACT_MISSING_CHECK = 4
-TEST_TARGET_COMPACT_REDUCE = 5
-TEST_MOD_REDUCE = 6
-TEST_COMPACT_REDUCE = 7
 
 """ mod_compact_modes = [ModCompactMode.TEST_BLUR,
                      ModCompactMode.TEST_CODE_FACTOR_DECAY,
@@ -69,17 +63,27 @@ if __name__ == "__main__":
     process_mode = "mp"  # debug or mp
     num_factors = 3
     val_per_factor = 10
-    n_seeds = 10
+    n_seeds = 1
+
 
     for mod_compact_mode in mod_compact_modes:
+        if not mod_compact_mode == ModCompactMode.TEST_COMPACT_MISSING_CHECK and not mod_compact_mode == ModCompactMode.TEST_MOD_MISSING_CHECK:
+            alphas = np.arange(0, 1.01, 0.2)
+            alphas = [float("{:.2f}".format(a)) for a in alphas]
+        else:
+            alphas = [0]
+
         all_results = {}
 
         for f in config_funcs:
-            results_dict = mod_compact_scenario_main(f, num_factors=num_factors,
-                                                     val_per_factor=val_per_factor,
-                                                     mod_compact_mode=mod_compact_mode,
-                                                     nseeds=n_seeds,
-                                                     process_mode=process_mode)
+            results_dict = benchmark_main(dataholder_class=ModCompactDataHolder,
+                                          config_fn=f,
+                                          num_factors=num_factors,
+                                          val_per_factor=val_per_factor,
+                                          scenario_mode=mod_compact_mode,
+                                          alphas=alphas,
+                                          nseeds=n_seeds,
+                                          process_mode=process_mode)
 
             id_ = f.get_metric_fn_id()[1]
             all_results[id_] = results_dict
@@ -89,11 +93,11 @@ if __name__ == "__main__":
                 pass
 
         if mod_compact_mode == ModCompactMode.TEST_MOD_MISSING_CHECK or mod_compact_mode == ModCompactMode.TEST_COMPACT_MISSING_CHECK:
-            no_alpha_make_graphs(all_results, num_factors, val_per_factor, mod_compact_mode)
+            parameter_free_graphing.make_graphs(all_results, num_factors, val_per_factor, mod_compact_mode)
         else:
             if mod_compact_mode == ModCompactMode.TEST_MOD_REDUCE:
                 num_factors = num_factors * 2
-            alpha_make_graphs(all_results, num_factors, val_per_factor, mod_compact_mode)
+            alpha_parameterized_graphing.make_graphs(all_results, num_factors, val_per_factor, mod_compact_mode)
 
 
 
