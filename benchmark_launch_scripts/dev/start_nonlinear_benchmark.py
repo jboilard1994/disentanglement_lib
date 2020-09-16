@@ -1,7 +1,24 @@
-import warnings
+import argparse
 import pickle
-
+import numpy as np
+import warnings
+import os
+import sys
 warnings.simplefilter(action='ignore', category=FutureWarning)
+
+
+def get_arguments():
+    parser = argparse.ArgumentParser(description='scenario')
+    parser.add_argument('--cwd', type=str, default='./',
+                        help='Specify from which folder run scenarios')
+    return parser.parse_args()
+
+
+# change working directory for batch files.
+args = get_arguments()
+os.chdir(args.cwd)
+sys.path.insert(0, args.cwd)
+
 
 from disentanglement_lib.config.benchmark.scenarios.nonlinear_bindings import ConfigDCIRFClass
 from disentanglement_lib.config.benchmark.scenarios.nonlinear_bindings import ConfigDCIRFReg

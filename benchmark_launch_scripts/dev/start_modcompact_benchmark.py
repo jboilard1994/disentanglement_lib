@@ -1,6 +1,24 @@
-import warnings
+import argparse
+import pickle
 import numpy as np
+import warnings
+import os
+import sys
 warnings.simplefilter(action='ignore', category=FutureWarning)
+
+
+def get_arguments():
+    parser = argparse.ArgumentParser(description='scenario')
+    parser.add_argument('--cwd', type=str, default='./',
+                        help='Specify from which folder run scenarios')
+    return parser.parse_args()
+
+
+# change working directory for batch files.
+args = get_arguments()
+os.chdir(args.cwd)
+sys.path.insert(0, args.cwd)
+
 
 from disentanglement_lib.config.benchmark.scenarios.mod_compact_bindings import ConfigDCIRFClass
 from disentanglement_lib.config.benchmark.scenarios.mod_compact_bindings import ConfigDCIRFReg
@@ -29,7 +47,7 @@ from disentanglement_lib.evaluation.benchmark.graphing import parameter_free_gra
 
 
 
-import pickle
+
 
 config_funcs = [ConfigIRS,
                 ConfigSAPDiscrete,
@@ -63,7 +81,7 @@ if __name__ == "__main__":
     process_mode = "mp"  # debug or mp
     num_factors = 3
     val_per_factor = 10
-    n_seeds = 1
+    n_seeds = 20
 
 
     for mod_compact_mode in mod_compact_modes:
