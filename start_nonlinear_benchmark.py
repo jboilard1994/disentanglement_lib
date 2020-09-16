@@ -33,11 +33,11 @@ config_funcs = [ConfigRFVAE,
                 ConfigIRS,
                 ConfigSAPDiscrete,
                 ConfigSAPContinuous,
-                ConfigModex,
                 ConfigDCIRFClass,
                 ConfigDCIRFReg,
                 ConfigDCILogRegL1,
                 ConfigDCILasso,
+                ConfigModex,
                 ConfigDCIMIG,
                 ConfigMIG,
                 ConfigWDG,
@@ -50,7 +50,7 @@ nonlinear_modes = [NonlinearMode.SIGMOID_FAV_CONTINUOUS,
 if __name__ == "__main__":
     num_factors = 3
     val_per_factor = 10 
-    n_seeds = 30
+    n_seeds = 20
     process_mode = "mp"  # "debug" or "mp" (multi-process)
 
     for nonlinear_mode in nonlinear_modes:

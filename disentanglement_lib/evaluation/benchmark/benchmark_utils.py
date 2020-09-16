@@ -11,41 +11,73 @@ import numpy as np
 
 
 def get_names(f_key, mode=""):
-    if f_key == Metrics.BVAE:
-        names = ["BVAE_eval_accuracy"]  # , "BVAE_train_accuracy"]
-    elif f_key == Metrics.RFVAE:
-        names = ["RFVAE_eval_accuracy"]  # , "RFVAE_train_accuracy"]
-    elif f_key == Metrics.FVAE:
-        names = ["FVAE_eval_accuracy"]  # , "FVAE_train_accuracy"]
-    elif f_key == Metrics.MODEX:
-        names = ["MODEX_modularity_score", "MODEX_modularity_oldtest_score", "MODEX_modularity_oldtrain_score", "MODEX_explicitness_score_test"]  # "MODEX_explicitness_score_train",
-    elif f_key == Metrics.DCIMIG:
-        names = ["DCIMIG_normalized"]  # , "DCIMIG_unnormalized"]
-    elif f_key == Metrics.DCI_RF_CLASS:
-        names = ["DCI_RF_class_completeness", "DCI_RF_class_disentanglement", "DCI_RF_class_informativeness_test"]  # "DCI_RF_class_informativeness_train"]
-    elif f_key == Metrics.DCI_RF_REG:
-        names = ["DCI_RF_reg_completeness", "DCI_RF_reg_disentanglement", "DCI_RF_reg_informativeness_test"]  # , "DCI_RF_reg_informativeness_train"]
-    elif f_key == Metrics.DCI_LOGREGL1:
-        names = ["DCI_LogRegL1_completeness", "DCI_LogRegL1_disentanglement", "DCI_LogRegL1_informativeness_test"]  # , "DCI_LogRegL1_informativeness_train"]
-    elif f_key == Metrics.DCI_LASSO:
-        names = ["DCI_Lasso_completeness", "DCI_Lasso_disentanglement", "DCI_Lasso_informativeness_test"]  # , "DCI_Lasso_informativeness_train"]
-    elif f_key == Metrics.SAP_DISCRETE:
-        names = ["SAP_discrete"]  # , "SAP_discrete_train"]
-    elif f_key == Metrics.JEMMIG:
-        names = ["NORM_JEMMIG_score"]  # "JEMMIG_score",
-    elif f_key == Metrics.MIG_SUP:
-        names = ["MIG_sup_score"]
-    elif f_key == Metrics.MIG:
-        names = ["MIG_score"]
-    elif f_key == Metrics.SAP_CONTINUOUS:
-        names = ["SAP_continuous"]
-    elif f_key == Metrics.IRS:
-        if mode == "noise":
-            names = ["IRS", "IRS_disentanglement_scores"]
-        else:
+    if mode == "":
+        if f_key == Metrics.BVAE:
+            names = ["BVAE_eval_accuracy"]  # , "BVAE_train_accuracy"]
+        elif f_key == Metrics.RFVAE:
+            names = ["RFVAE_eval_accuracy"]  # , "RFVAE_train_accuracy"]
+        elif f_key == Metrics.FVAE:
+            names = ["FVAE_eval_accuracy"]  # , "FVAE_train_accuracy"]
+        elif f_key == Metrics.MODEX:
+            names = ["MODEX_modularity_score", "MODEX_explicitness_score_test"]  # , "MODEX_modularity_oldtest_score", "MODEX_modularity_oldtrain_score", "MODEX_explicitness_score_test"]  # "MODEX_explicitness_score_train",
+        elif f_key == Metrics.DCIMIG:
+            names = ["DCIMIG_normalized"]  # , "DCIMIG_unnormalized"]
+        elif f_key == Metrics.DCI_RF_CLASS:
+            names = ["DCI_RF_class_completeness", "DCI_RF_class_disentanglement", "DCI_RF_class_informativeness_test"]  # "DCI_RF_class_informativeness_train"]
+        elif f_key == Metrics.DCI_RF_REG:
+            names = ["DCI_RF_reg_completeness", "DCI_RF_reg_disentanglement", "DCI_RF_reg_informativeness_test"]  # , "DCI_RF_reg_informativeness_train"]
+        elif f_key == Metrics.DCI_LOGREGL1:
+            names = ["DCI_LogRegL1_completeness", "DCI_LogRegL1_disentanglement", "DCI_LogRegL1_informativeness_test"]  # , "DCI_LogRegL1_informativeness_train"]
+        elif f_key == Metrics.DCI_LASSO:
+            names = ["DCI_Lasso_completeness", "DCI_Lasso_disentanglement", "DCI_Lasso_informativeness_test"]  # , "DCI_Lasso_informativeness_train"]
+        elif f_key == Metrics.SAP_DISCRETE:
+            names = ["SAP_discrete"]  # , "SAP_discrete_train"]
+        elif f_key == Metrics.JEMMIG:
+            names = ["NORM_JEMMIG_score"]  # "JEMMIG_score",
+        elif f_key == Metrics.MIG_SUP:
+            names = ["MIG_sup_score"]
+        elif f_key == Metrics.MIG:
+            names = ["MIG_score"]
+        elif f_key == Metrics.SAP_CONTINUOUS:
+            names = ["SAP_continuous"]
+        elif f_key == Metrics.IRS:
             names = ["IRS"]
-    elif f_key == Metrics.WDG:
-        names = ["WDG_score"]
+        elif f_key == Metrics.WDG:
+            names = ["WDG_score"]
+
+    elif mode == "parsed":
+        if f_key == Metrics.BVAE:
+            names = ["BVAE_eval_accuracy"]  # , "BVAE_train_accuracy"]
+        elif f_key == Metrics.RFVAE:
+            names = ["RFVAE_eval_accuracy"]  # , "RFVAE_train_accuracy"]
+        elif f_key == Metrics.FVAE:
+            names = ["FVAE_eval_accuracy"]  # , "FVAE_train_accuracy"]
+        elif f_key == Metrics.MODEX:
+            names = ["MODEX_modularity_score", "MODEX_explicitness_score_test"]  # , "MODEX_modularity_oldtest_score", "MODEX_modularity_oldtrain_score", "MODEX_explicitness_score_test"]  # "MODEX_explicitness_score_train",
+        elif f_key == Metrics.DCIMIG:
+            names = ["DCIMIG_normalized"]  # , "DCIMIG_unnormalized"]
+        elif f_key == Metrics.DCI_RF_CLASS:
+            names = ["DCI_RF_class_completeness", "DCI_RF_class_disentanglement", "DCI_RF_class_informativeness_test"]  # "DCI_RF_class_informativeness_train"]
+        elif f_key == Metrics.DCI_RF_REG:
+            names = []  # ["DCI_RF_reg_completeness", "DCI_RF_reg_disentanglement", "DCI_RF_reg_informativeness_test"]  # , "DCI_RF_reg_informativeness_train"]
+        elif f_key == Metrics.DCI_LOGREGL1:
+            names = []  # ["DCI_LogRegL1_completeness", "DCI_LogRegL1_disentanglement", "DCI_LogRegL1_informativeness_test"]  # , "DCI_LogRegL1_informativeness_train"]
+        elif f_key == Metrics.DCI_LASSO:
+            names = []  # ["DCI_Lasso_completeness", "DCI_Lasso_disentanglement", "DCI_Lasso_informativeness_test"]  # , "DCI_Lasso_informativeness_train"]
+        elif f_key == Metrics.SAP_DISCRETE:
+            names = ["SAP_discrete"]  # , "SAP_discrete_train"]
+        elif f_key == Metrics.JEMMIG:
+            names = ["NORM_JEMMIG_score"]  # "JEMMIG_score",
+        elif f_key == Metrics.MIG_SUP:
+            names = ["MIG_sup_score"]
+        elif f_key == Metrics.MIG:
+            names = ["MIG_score"]
+        elif f_key == Metrics.SAP_CONTINUOUS:
+            names = ["SAP_continuous"]
+        elif f_key == Metrics.IRS:
+            names = ["IRS"]
+        elif f_key == Metrics.WDG:
+            names = ["WDG_score"]
     return names
 
 # def make_table(results_dict, num_factors, val_per_factor):
@@ -62,22 +94,21 @@ def get_names(f_key, mode=""):
 #         pass
 
 
-def _get_discrete_cumulative_distributions(discrete_targets):
-    cum_dists = []
-    for i in range(discrete_targets.shape[1]):
-        # get distributions first
-        counts = np.bincount(discrete_targets[:, i])
-        dist = counts/np.sum(counts)
+def organize_results(result_dicts_list, config_fn):
+    """ Organizes input list of result dicts into indexed K, sub-index alpha, sub-sub-index (etc) depending on the metric,
+    with final index being the metric name/list of seeded results"""
 
-        # then get cumulative.
-        cum_dist = np.zeros_like(dist)
-        for b_i in range(len(dist)):
-            cum_dist[b_i] = np.sum(dist[:b_i + 1])
+    metric_id = config_fn.get_metric_fn_id()[1]
+    organized_results = []
+    for results_list in result_dicts_list:
+        for result_dict in results_list:
+            dict_ = {}
+            for key, value in result_dict.items():
+                dict_[key] = value
+            organized_results.append(dict_)
+        pass
 
-        cum_dist = np.insert(cum_dist, 0, 0)
-        cum_dists.append(cum_dist)
-
-    return cum_dists
+    return organized_results
 
 
 def init_dict(d, all_params, depth):

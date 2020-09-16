@@ -187,7 +187,7 @@ def _percentile_histogram_discretize(target, num_bins, cumulative_dist):
         if percentiles[0] < 0: percentiles[0] = 0
         if percentiles[-1] > 100: percentiles[-1] = 100
 
-        bins = np.percentile(target, percentiles)
+        bins = np.percentile(target[i], percentiles)
         discretized[i, :] = np.digitize(target[i, :], bins[:-1]) - 1
         all_bins.append(bins)
     return discretized, all_bins

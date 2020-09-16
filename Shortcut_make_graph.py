@@ -1,7 +1,5 @@
 from disentanglement_lib.evaluation.benchmark.graphing.non_linear_graphing import make_graphs as nl_make_graph
-from disentanglement_lib.evaluation.benchmark.graphing.rotation_graphing import make_graphs as rotate_graph
 from disentanglement_lib.evaluation.benchmark.graphing.noise_graphing import make_graphs as noise_make_graph
-from disentanglement_lib.evaluation.benchmark.graphing.modcompact_graphing import make_graphs as mc_make_graph
 
 from disentanglement_lib.evaluation.benchmark.scenarios.noise_dataholder import NoiseMode
 from disentanglement_lib.evaluation.benchmark.scenarios.nonlinear_dataholder import NonlinearMode
@@ -31,9 +29,13 @@ for file in file_list:
         elif _mode in NonlinearMode:
             nl_make_graph(all_results, 3, 10, _mode)
         elif _mode in RotationMode:
-            rotate_graph(all_results, 3, 10, _mode)
+            noise_make_graph(all_results, 3, 10, _mode)
         elif _mode in ModCompactMode:
-            mc_make_graph(all_results, 3, 10, _mode)
+            if _mode == ModCompactMode.TEST_MOD_MISSING_CHECK or _mode == ModCompactMode.TEST_COMPACT_MISSING_CHECK:
+                nl_make_graph(all_results, 3, 10, _mode)
+            else:
+                noise_make_graph(all_results, 3, 10, _mode)
+
 
         # close the file
         file.close()

@@ -88,8 +88,17 @@ def compute_modularity_explicitness(dataholder,
 
     explicitness_score_train = np.zeros([ys_train.shape[0], 1])
     explicitness_score_test = np.zeros([ys_test.shape[0], 1])
-    mus_train_norm, mean_mus, stddev_mus = utils.normalize_data(mus_train)
-    mus_test_norm, _, _ = utils.normalize_data(mus_test, mean_mus, stddev_mus)
+
+    # Avoid divisions by zero for inactive dimensions
+    std_train = np.std(mus_train, axis=1)
+    std_train[std_train == 0] = 1
+
+    mus_train_norm, mean_mus, __ = utils.normalize_data(mus_train, stddev=std_train)
+    mus_test_norm, _, _ = utils.normalize_data(mus_test, mean_mus, std_train)
+
+   # mus_train_norm = np.nan_to_num(mus_train_norm, copy=True, nan=0.0)
+   # mus_test_norm = np.nan_to_num(mus_test_norm, copy=True, nan=0.0)
+
     for i in range(ys_train.shape[0]):
         explicitness_score_train[i], explicitness_score_test[i] = \
             explicitness_per_factor(random_state, mus_train_norm, ys_train[i, :],

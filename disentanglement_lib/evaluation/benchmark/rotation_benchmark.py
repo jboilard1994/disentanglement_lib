@@ -38,7 +38,7 @@ from disentanglement_lib.evaluation.benchmark.sampling.sampling_factor_varied im
 from disentanglement_lib.evaluation.benchmark.sampling.generic_sampling import GenericSampling
 
 from disentanglement_lib.evaluation.benchmark.scenarios import rotation_dataholder
-from disentanglement_lib.evaluation.benchmark.benchmark_utils import manage_processes, init_dict, add_to_dict
+from disentanglement_lib.evaluation.benchmark.benchmark_utils import manage_processes, init_dict, add_to_dict, organize_results
 from disentanglement_lib.config.benchmark.scenarios.bindings import Metrics
 from disentanglement_lib.evaluation.benchmark.scenarios.rotation_dataholder import RotationMode
 
@@ -57,7 +57,7 @@ def test_metric(config_class, num_factors, val_per_factor, index_dict, queue, ro
 
     configs = config_fn.get_gin_configs(n_samples, val_per_factor)
     param_ids, all_params, param_names = config_fn.get_extra_params()
-    results = init_dict({}, all_params, depth=0)
+    results = []
     
     for i, config in enumerate(configs):
         gin_config_files, gin_bindings = config
@@ -74,72 +74,13 @@ def test_metric(config_class, num_factors, val_per_factor, index_dict, queue, ro
 
         # Get scores and save in matrix
         score = metric_fn(dataholder, random_state)
-        results = add_to_dict(results, extra_param_id, score, 0)
-        
+        result_dict = {"alpha": theta, "K": 1, "seed": seed, "f": f, "score": score, "extra_params": extra_param_id, "param_names": param_names}
+        results.append(result_dict)
         gin.clear_config()
-        
-    return_dict = {"theta": theta, "seed": seed, "f": f, "result": results}
-    queue.put(return_dict)  # Multiprocessing accessible list.
+
+    queue.put(results)  # Multiprocessing accessible list.
     
-    return return_dict
-
-
-def organize_results(result_dicts_list, metric_id):
-    """ Organizes input list of result dicts into indexed K, sub-index alpha, sub-sub-index (etc) depending on the metric,
-    with final index being the metric name/list of seeded results"""
-
-    # Find all unique values
-    thetas = []
-    seeds = []
-    for result_dict in result_dicts_list:
-        thetas.append(result_dict["theta"])
-        seeds.append(result_dict["seed"])
-
-    # Isolate all values
-    thetas = np.unique(thetas)
-
-    # initialize organized_results
-    organized_results = {}
-    for theta in thetas:
-        organized_results[theta] = {}
-
-    # Fill organized dict!
-    for result_dict in result_dicts_list:
-        f = result_dict['f']
-        theta = result_dict['theta']
-        fn_result_dict = result_dict["result"]
-
-        # Bvae and FVAE have common extra parameters to evaluate.
-        if metric_id == Metrics.BVAE or metric_id == Metrics.FVAE or metric_id == Metrics.RFVAE:
-            # if a dict entry does not exist yet.
-            if organized_results[theta] == {}:
-                for batch_size, num_eval_dict in fn_result_dict.items():
-                    organized_results[theta][batch_size] = {}
-
-                    for num_eval, scores_dict in num_eval_dict.items():
-                        organized_results[theta][batch_size][num_eval] = {}
-
-                        for score_name, __ in scores_dict.items():
-                            organized_results[theta][batch_size][num_eval][score_name] = []
-
-            # Fill in the organized dict. append seeded results
-            for batch_size, num_eval_dict in fn_result_dict.items():
-                for num_eval, scores_dict in num_eval_dict.items():
-                    for score_name, score in scores_dict.items():
-                        organized_results[theta][batch_size][num_eval][score_name].append(score)
-
-        # All other metric organize their dictionnary here.
-        else:
-            # if a dict entry does not exist yet.
-            if organized_results[theta] == {}:
-                for key, __ in fn_result_dict.items():
-                    organized_results[theta][key] = []
-
-            # F ill in the organized dict. append seeded results
-            for metric_name, value in fn_result_dict.items():
-                organized_results[theta][metric_name].append(value)
-
-    return organized_results
+    return results
 
 
 def rotation_scenario_main(config_fn, num_factors, val_per_factor, rotation_mode, nseeds=50, process_mode="debug"):
@@ -175,4 +116,4 @@ def rotation_scenario_main(config_fn, num_factors, val_per_factor, rotation_mode
     if process_mode == "mp": 
         result_dicts_list = manage_processes(processes, q)
     
-    return organize_results(result_dicts_list, config_fn.get_metric_fn_id()[1])
+    return organize_results(result_dicts_list, config_fn)

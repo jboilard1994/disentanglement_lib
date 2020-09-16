@@ -21,6 +21,7 @@ from disentanglement_lib.config.benchmark.scenarios.noise_bindings import Config
 from disentanglement_lib.config.benchmark.scenarios.noise_bindings import ConfigWDG
 
 from disentanglement_lib.evaluation.benchmark.noise_benchmark import noise_scenario_main
+from disentanglement_lib.evaluation.benchmark.scenarios import noise_dataholder
 from disentanglement_lib.evaluation.benchmark.scenarios.noise_dataholder import NoiseMode
 from disentanglement_lib.evaluation.benchmark.graphing.noise_graphing import make_graphs
 
@@ -57,7 +58,9 @@ if __name__ == "__main__":
         all_results = {}
 
         for f in config_funcs:
-            results_dict = noise_scenario_main(f, num_factors=num_factors,
+            results_dict = noise_scenario_main(dataholder_class=noise_dataholder.NoiseDataHolder,
+                                               config_fn=f,
+                                               num_factors=num_factors,
                                                val_per_factor=val_per_factor,
                                                noise_mode=noise_mode,
                                                nseeds=n_seeds,

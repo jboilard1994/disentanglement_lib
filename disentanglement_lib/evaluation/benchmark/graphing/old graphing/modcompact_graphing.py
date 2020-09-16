@@ -92,11 +92,8 @@ def make_graphs(results_dict, num_factors, val_per_factor, mod_compact_mode):
     if not os.path.exists('./figs/{}/'.format(str(mod_compact_mode))):
         os.mkdir('./figs/{}/'.format(str(mod_compact_mode)))
 
-    if mod_compact_mode == ModCompactMode.TEST_MOD_REDUCE:
-        num_factors = num_factors*2
 
-    if mod_compact_mode == ModCompactMode.TEST_MOD_MISSING_CHECK or mod_compact_mode == ModCompactMode.TEST_COMPACT_MISSING_CHECK:
-        make_graphs_no_alpha(results_dict, num_factors, val_per_factor, mod_compact_mode)
+
     else:
         # Define some necessary values found in dict.
         alpha_dict_sample = list(results_dict.values())[0]

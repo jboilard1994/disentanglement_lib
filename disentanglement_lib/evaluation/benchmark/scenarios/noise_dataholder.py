@@ -39,11 +39,14 @@ class NoiseDataHolder(DataHolder):
 
     def __init__(self, random_state, alpha, noise_mode, num_factors=2, val_per_factor=10, K=1, n_extra_z=5):
         self.K = K
-        self.alpha = alpha
         self.val_per_factor = val_per_factor
         self.noise_mode = noise_mode
         self.n_extra_z = n_extra_z  # TODO : CHANGE TO MAX_N_Z, WITH NONE VALUE IF NO EXTRA CODE
         self.factor_sizes = [val_per_factor]*num_factors
+
+        if noise_mode == NoiseMode.EXTRA_Z_COLLAPSED_TO_UNCOLLAPSED and alpha == 0:
+            alpha = 0.01
+        self.alpha = alpha
 
         discrete_factors, continuous_factors, representations = self._load_data(random_state, K, num_factors, alpha)
         DataHolder.__init__(self, discrete_factors, continuous_factors, representations)

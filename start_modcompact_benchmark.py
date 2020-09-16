@@ -22,7 +22,11 @@ from disentanglement_lib.config.benchmark.scenarios.mod_compact_bindings import 
 
 from disentanglement_lib.evaluation.benchmark.mod_compact_benchmark import mod_compact_scenario_main
 from disentanglement_lib.evaluation.benchmark.scenarios.modcompact_dataholder import ModCompactMode
-from disentanglement_lib.evaluation.benchmark.graphing.modcompact_graphing import make_graphs
+
+from disentanglement_lib.evaluation.benchmark.graphing.noise_graphing import make_graphs as alpha_make_graphs
+from disentanglement_lib.evaluation.benchmark.graphing.non_linear_graphing import make_graphs as no_alpha_make_graphs
+
+
 
 import pickle
 
@@ -50,19 +54,22 @@ TEST_TARGET_COMPACT_REDUCE = 5
 TEST_MOD_REDUCE = 6
 TEST_COMPACT_REDUCE = 7
 
-
-mod_compact_modes = [ModCompactMode.TEST_BLUR,
+""" mod_compact_modes = [ModCompactMode.TEST_BLUR,
                      ModCompactMode.TEST_CODE_FACTOR_DECAY,
                      ModCompactMode.TEST_MOD_MISSING_CHECK,
                      ModCompactMode.TEST_COMPACT_MISSING_CHECK,
                      ModCompactMode.TEST_MOD_REDUCE,
+                     ModCompactMode.TEST_COMPACT_REDUCE]"""
+
+mod_compact_modes = [ModCompactMode.TEST_MOD_MISSING_CHECK,
+                     ModCompactMode.TEST_COMPACT_MISSING_CHECK,
                      ModCompactMode.TEST_COMPACT_REDUCE]
 
 if __name__ == "__main__": 
     process_mode = "mp"  # debug or mp
     num_factors = 3
     val_per_factor = 10
-    n_seeds = 15
+    n_seeds = 10
 
     for mod_compact_mode in mod_compact_modes:
         all_results = {}
@@ -81,7 +88,12 @@ if __name__ == "__main__":
                 pickle.dump([mod_compact_mode, all_results], open("./pickled_results/{}.p".format(str(mod_compact_mode)), "wb"))
                 pass
 
-        make_graphs(all_results, num_factors, val_per_factor, mod_compact_mode=mod_compact_mode)
+        if mod_compact_mode == ModCompactMode.TEST_MOD_MISSING_CHECK or mod_compact_mode == ModCompactMode.TEST_COMPACT_MISSING_CHECK:
+            no_alpha_make_graphs(all_results, num_factors, val_per_factor, mod_compact_mode)
+        else:
+            if mod_compact_mode == ModCompactMode.TEST_MOD_REDUCE:
+                num_factors = num_factors * 2
+            alpha_make_graphs(all_results, num_factors, val_per_factor, mod_compact_mode)
 
 
 

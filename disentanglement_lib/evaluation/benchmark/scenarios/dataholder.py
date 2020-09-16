@@ -6,7 +6,6 @@ import os
 from disentanglement_lib.evaluation.benchmark.sampling.sampling_factor_fixed import SingleFactorFixedSampling
 from disentanglement_lib.evaluation.benchmark.sampling.sampling_factor_varied import SingleFactorVariedSampling
 from disentanglement_lib.evaluation.benchmark.sampling.generic_sampling import GenericSampling
-from disentanglement_lib.evaluation.benchmark.benchmark_utils import _get_discrete_cumulative_distributions
 
 @gin.configurable("dataholder")
 class DataHolder:
@@ -121,15 +120,20 @@ class DataHolder:
                 
         return np.take(self.embed_codes, factors_ids, axis=0)       
             
-            
-            
-              
-          
-          
-          
-          
-          
-  
-          
-          
-          
+
+def _get_discrete_cumulative_distributions(discrete_targets):
+    cum_dists = []
+    for i in range(discrete_targets.shape[1]):
+        # get distributions first
+        counts = np.bincount(discrete_targets[:, i])
+        dist = counts/np.sum(counts)
+
+        # then get cumulative.
+        cum_dist = np.zeros_like(dist)
+        for b_i in range(len(dist)):
+            cum_dist[b_i] = np.sum(dist[:b_i + 1])
+
+        cum_dist = np.insert(cum_dist, 0, 0)
+        cum_dists.append(cum_dist)
+
+    return cum_dists

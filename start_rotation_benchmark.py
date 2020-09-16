@@ -22,7 +22,7 @@ from disentanglement_lib.config.benchmark.scenarios.rotation_bindings import Con
 
 from disentanglement_lib.evaluation.benchmark.rotation_benchmark import rotation_scenario_main
 from disentanglement_lib.evaluation.benchmark.scenarios.rotation_dataholder import RotationMode
-from disentanglement_lib.evaluation.benchmark.graphing.rotation_graphing import make_graphs
+from disentanglement_lib.evaluation.benchmark.graphing.noise_graphing import make_graphs as alpha_make_graph
 
 import pickle
 
@@ -68,7 +68,7 @@ if __name__ == "__main__":
                 pickle.dump([rotation_mode, all_results], open("./pickled_results/{}.p".format(str(rotation_mode)), "wb"))
                 pass
 
-        make_graphs(all_results, num_factors, val_per_factor, rotation_mode=rotation_mode)
+        alpha_make_graph(all_results, num_factors, val_per_factor, rotation_mode)
 
 
 
