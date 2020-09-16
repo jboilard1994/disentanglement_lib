@@ -37,14 +37,14 @@ class NoiseDataHolder(DataHolder):
     """Author : Jonathan Boilard 2020
     Dataset where dummy factors are also the observations, with ratio of noise to relationship between code/factors."""
 
-    def __init__(self, random_state, alpha, noise_mode, num_factors=2, val_per_factor=10, K=1, n_extra_z=5):
+    def __init__(self, random_state, alpha, scenario_mode, num_factors=2, val_per_factor=10, K=1, n_extra_z=5):
         self.K = K
         self.val_per_factor = val_per_factor
-        self.noise_mode = noise_mode
+        self.noise_mode = scenario_mode
         self.n_extra_z = n_extra_z  # TODO : CHANGE TO MAX_N_Z, WITH NONE VALUE IF NO EXTRA CODE
         self.factor_sizes = [val_per_factor]*num_factors
 
-        if noise_mode == NoiseMode.EXTRA_Z_COLLAPSED_TO_UNCOLLAPSED and alpha == 0:
+        if scenario_mode == NoiseMode.EXTRA_Z_COLLAPSED_TO_UNCOLLAPSED and alpha == 0:
             alpha = 0.01
         self.alpha = alpha
 
@@ -53,7 +53,7 @@ class NoiseDataHolder(DataHolder):
         pass
     
     @staticmethod
-    def get_expected_len(num_factors, val_per_factor, K):
+    def get_expected_len(num_factors, val_per_factor, K, noise_mode):
         return K*val_per_factor**num_factors
 
     def _load_data(self, random_state, K, num_factors, alpha):

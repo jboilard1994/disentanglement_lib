@@ -60,7 +60,7 @@ def get_table_meanstd_info(fn_results_list,
     return rows_data, pd_indexes, all_means, all_stds
 
 
-def plot_mean_lines(means, mnames, alphas, K, noise_mode, mode="all"):
+def plot_mean_lines(means, mnames, alphas, K, scenario_mode, mode="all"):
     linestyle_tuple = [
         (0, ()),       # 'solid',
         (0, (1, 5)),   # loosely dotted
@@ -98,7 +98,7 @@ def plot_mean_lines(means, mnames, alphas, K, noise_mode, mode="all"):
     x1, x2, y1, y2 = plt.axis()
     plt.axis((x1, x2, 0, 1.05))
     plt.legend(handlelength=10, loc='center left', bbox_to_anchor=(1, 0.5))
-    plt.savefig('figs/{}/metric_means_K_{}_{}.png'.format(str(noise_mode), K, mode), bbox_inches='tight')
+    plt.savefig('figs/{}/metric_means_K_{}_{}.png'.format(str(scenario_mode), K, mode), bbox_inches='tight')
     plt.close()
     pass
 
@@ -124,7 +124,7 @@ def get_list_dict_from_ids(_list_to_sample, ids):
     return _list, _dict
 
 
-def make_violin_plot(fn_results_list, metric_names, num_factors, val_per_factor, noise_mode):
+def make_violin_plot(fn_results_list, metric_names, num_factors, val_per_factor, scenario_mode):
     def add_label(violin, label):
         color = violin["bodies"][0].get_facecolor().flatten()
         labels.append((mpatches.Patch(color=color), label))
@@ -153,9 +153,9 @@ def make_violin_plot(fn_results_list, metric_names, num_factors, val_per_factor,
             for extra_param, param_name in zip(extra_params, grouped_dict["param_names"]):
                 title_str = title_str + "{}_{} ".format(param_name, extra_param)
 
-            plt.title("{}; Mode: {}".format(m_name, str(noise_mode))) #+ title_str + "{} Factors / {} values each".format(num_factors, val_per_factor))
+            plt.title("{}; Mode: {}".format(m_name, str(scenario_mode))) #+ title_str + "{} Factors / {} values each".format(num_factors, val_per_factor))
             plt.xticks(range(1, len(grouped_dict["unique_alphas"]) + 1), grouped_dict["unique_alphas"])
-            plt.xlabel("Noise-signal ratio")
+            plt.xlabel("⍺")
             plt.ylabel(m_name)
 
             if len(grouped_dict["unique_ks"]) > 1:
@@ -163,13 +163,13 @@ def make_violin_plot(fn_results_list, metric_names, num_factors, val_per_factor,
 
             x1, x2, y1, y2 = plt.axis()
             plt.axis((x1, x2, 0, 1.05))
-            plt.savefig('figs/{}/{}_{}'.format(str(noise_mode), m_name, title_str), bbox_inches='tight')
+            plt.savefig('figs/{}/{}_{}'.format(str(scenario_mode), m_name, title_str), bbox_inches='tight')
             plt.close()
 
 
-def make_graphs(results_dict_list, num_factors, val_per_factor, noise_mode):
-    if not os.path.exists('./figs/{}/'.format(str(noise_mode))):
-        os.mkdir('./figs/{}/'.format(str(noise_mode)))
+def make_graphs(results_dict_list, num_factors, val_per_factor, scenario_mode):
+    if not os.path.exists('./figs/{}/'.format(str(scenario_mode))):
+        os.mkdir('./figs/{}/'.format(str(scenario_mode)))
     all_means = {}
     all_names = {}
     all_means_2 = {}
@@ -190,7 +190,7 @@ def make_graphs(results_dict_list, num_factors, val_per_factor, noise_mode):
         metric_parsed_names = get_names(f_key, mode="parsed")
 
         if len(metric_names) > 0:
-            make_violin_plot(fn_results_list, metric_names, num_factors, val_per_factor, noise_mode)
+            make_violin_plot(fn_results_list, metric_names, num_factors, val_per_factor, scenario_mode)
 
             rows_data, pd_indexes, means, stds = get_table_meanstd_info(fn_results_list, metric_names, num_factors,val_per_factor)
             rows_data_2, pd_indexes_2, means_2, stds_2 = get_table_meanstd_info(fn_results_list, metric_parsed_names, num_factors,
@@ -218,12 +218,12 @@ def make_graphs(results_dict_list, num_factors, val_per_factor, noise_mode):
 
     # Save table and fig for each K
     for K in grouped_dict["unique_ks"]:
-        tableDFs[K].to_csv("figs/{}/big_table_K_{}.csv".format(str(noise_mode), K))
+        tableDFs[K].to_csv("figs/{}/big_table_K_{}.csv".format(str(scenario_mode), K))
         all_means[K] = np.vstack(all_means[K])
         all_names[K] = np.vstack(all_names[K])
         all_means_2[K] = np.vstack(all_means_2[K])
         all_names_2[K] = np.vstack(all_names_2[K])
 
-        plot_mean_lines(all_means[K], all_names[K], grouped_dict["unique_alphas"], K, noise_mode, mode="all")
-        plot_mean_lines(all_means_2[K], all_names_2[K], grouped_dict["unique_alphas"], K, noise_mode, mode="parsed")
+        plot_mean_lines(all_means[K], all_names[K], grouped_dict["unique_alphas"], K, scenario_mode, mode="all")
+        plot_mean_lines(all_means_2[K], all_names_2[K], grouped_dict["unique_alphas"], K, scenario_mode, mode="parsed")
 

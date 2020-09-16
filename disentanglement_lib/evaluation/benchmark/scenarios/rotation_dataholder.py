@@ -35,18 +35,18 @@ class RotationDataHolder(DataHolder):
     """Author : Jonathan Boilard 2020
     Dataset where dummy factors are also the observations, with ratio of noise to relationship between code/factors."""
 
-    def __init__(self, random_state, theta, rotation_mode, num_factors=2, val_per_factor=10):
-        self.theta = theta
+    def __init__(self, random_state, alpha, scenario_mode, num_factors=2, val_per_factor=10, K=None, n_extra_z=5):
+        self.theta = alpha
         self.val_per_factor = val_per_factor
-        self.rotation_mode = rotation_mode
+        self.rotation_mode = scenario_mode
         self.factor_sizes = [val_per_factor]*num_factors
 
-        discrete_factors, continuous_factors, representations = self._load_data(random_state, num_factors, theta)
+        discrete_factors, continuous_factors, representations = self._load_data(random_state, num_factors, alpha)
         DataHolder.__init__(self, discrete_factors, continuous_factors, representations)
         pass
     
     @staticmethod
-    def get_expected_len(num_factors, val_per_factor, k):
+    def get_expected_len(num_factors, val_per_factor, k, rotation_mode):
         return k*val_per_factor**num_factors
 
     def _load_data(self, random_state, num_factors, theta):

@@ -26,7 +26,7 @@ def group_list_in_dict(results_dict_list):
     return grouped_dict
 
 
-def make_violin_plot(violin_data, labels, fn_results_list, metric_names, num_factors, val_per_factor, nonlinear_mode, final_metric=False, mode="all"):
+def make_violin_plot(violin_data, labels, fn_results_list, metric_names, num_factors, val_per_factor, scenario_mode, final_metric=False, mode="all"):
     def add_label(violin, label, violin_color):
         legend_labels.append((mpatches.Patch(color=violin_color), label))
 
@@ -72,7 +72,7 @@ def make_violin_plot(violin_data, labels, fn_results_list, metric_names, num_fac
                 i = i+1
 
         plt.title(
-            "Non-Linear All Metrics : {}; {} Factors / {} values each".format(str(nonlinear_mode), num_factors, val_per_factor))
+            "All Metrics : {}; {} Factors / {} values each".format(str(scenario_mode), num_factors, val_per_factor))
         plt.ylabel("Metric Score")
 
         x1, x2, y1, y2 = plt.axis()
@@ -82,16 +82,16 @@ def make_violin_plot(violin_data, labels, fn_results_list, metric_names, num_fac
         plt.xticks(range(1, i+1), x_ticks)
         x1, x2, y1, y2 = plt.axis()
         plt.axis((x1, x2, 0, 1.01))
-        plt.savefig('figs/{}/{}_{}'.format(str(nonlinear_mode), "metrics_violin", mode), bbox_inches='tight')
+        plt.savefig('figs/{}/{}_{}'.format(str(scenario_mode), "metrics_violin", mode), bbox_inches='tight')
         plt.close()
 
     return violin_data, labels
 
 
 
-def make_graphs(results_dict_list, num_factors, val_per_factor, nonlinear_mode):
-    if not os.path.exists('./figs/{}/'.format(str(nonlinear_mode))):
-        os.mkdir('./figs/{}/'.format(str(nonlinear_mode)))
+def make_graphs(results_dict_list, num_factors, val_per_factor, scenario_mode):
+    if not os.path.exists('./figs/{}/'.format(str(scenario_mode))):
+        os.mkdir('./figs/{}/'.format(str(scenario_mode)))
 
     legend_labels = []
     violin_data = []
@@ -101,7 +101,7 @@ def make_graphs(results_dict_list, num_factors, val_per_factor, nonlinear_mode):
         i = i+1
         metric_names = get_names(f_key)
         violin_data, violin_labels = make_violin_plot(violin_data, legend_labels,
-                                                      fn_results_list, metric_names, num_factors, val_per_factor, nonlinear_mode,
+                                                      fn_results_list, metric_names, num_factors, val_per_factor, scenario_mode,
                                                       final_metric=(not i < len(list(results_dict_list.keys())) - 1))  # Save graph indicator
 
     legend_labels = []
@@ -111,5 +111,5 @@ def make_graphs(results_dict_list, num_factors, val_per_factor, nonlinear_mode):
         i = i+1
         metric_names = get_names(f_key, mode="parsed")
         violin_data, violin_labels = make_violin_plot(violin_data, legend_labels,
-                                                      fn_results_list, metric_names, num_factors, val_per_factor, nonlinear_mode,
+                                                      fn_results_list, metric_names, num_factors, val_per_factor, scenario_mode,
                                                       final_metric=(not i < len(list(results_dict_list.keys())) - 1), mode="parsed")  # Save graph indicator

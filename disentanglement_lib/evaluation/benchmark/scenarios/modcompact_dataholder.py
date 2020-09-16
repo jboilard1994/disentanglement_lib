@@ -40,13 +40,13 @@ class ModCompactDataHolder(DataHolder):
     """Author : Jonathan Boilard 2020
     Dataset where dummy factors are also the observations, with ratio of noise to relationship between code/factors."""
 
-    def __init__(self, random_state, alpha, mod_compact_mode, num_factors=3, val_per_factor=10, n_extra_z=5):
-        if mod_compact_mode == ModCompactMode.TEST_MOD_REDUCE:
+    def __init__(self, random_state, alpha, scenario_mode, num_factors=2, val_per_factor=10, K=1, n_extra_z=5):
+        if scenario_mode == ModCompactMode.TEST_MOD_REDUCE:
             num_factors = 4
 
         self.alpha = alpha
         self.val_per_factor = val_per_factor
-        self.mod_compact_mode = mod_compact_mode
+        self.mod_compact_mode = scenario_mode
         self.factor_sizes = [val_per_factor]*num_factors
 
         discrete_factors, continuous_factors, representations = self._load_data(random_state, num_factors, alpha)
@@ -54,7 +54,7 @@ class ModCompactDataHolder(DataHolder):
         pass
     
     @staticmethod
-    def get_expected_len(num_factors, val_per_factor, mod_compact_mode):
+    def get_expected_len(num_factors, val_per_factor, K, mod_compact_mode):
         if mod_compact_mode == ModCompactMode.TEST_MOD_REDUCE:
             num_factors = 4
         return val_per_factor**num_factors

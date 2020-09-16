@@ -87,11 +87,7 @@ def test_metric(config_class, num_factors, val_per_factor, index_dict, queue, mo
 
 def mod_compact_scenario_main(config_fn, num_factors, val_per_factor, mod_compact_mode, nseeds=50, process_mode="debug"):
     # define scenario parameter alpha
-    if not mod_compact_mode == ModCompactMode.TEST_COMPACT_MISSING_CHECK and not mod_compact_mode == ModCompactMode.TEST_MOD_MISSING_CHECK:
-        alphas = np.arange(0, 1.01, 0.2)
-        alphas = [float("{:.2f}".format(a)) for a in alphas]
-    else:
-        alphas = [0]
+
     
     processes = []
     result_dicts_list = []

@@ -40,22 +40,22 @@ class NonlinearDataHolder(DataHolder):
     """Author : Jonathan Boilard 2020
     Dataset where dummy factors are also the observations, with ratio of noise to relationship between code/factors."""
 
-    def __init__(self, random_state, non_linear_mode, num_factors=2, val_per_factor=10):
+    def __init__(self, random_state, alpha, scenario_mode, num_factors=2, val_per_factor=10, K=None, n_extra_z=5):
         self.val_per_factor = val_per_factor
         # self.noise_mode = noise_mode
         # self.n_extra_z = n_extra_z
         self.factor_sizes = [val_per_factor] * num_factors
 
         # parse through noise modes to define scenario configs
-        if non_linear_mode == NonlinearMode.SIGMOID_FAV_CONTINUOUS or non_linear_mode == NonlinearMode.QUADRATIC_FAV_CONTINUOUS:
+        if scenario_mode == NonlinearMode.SIGMOID_FAV_CONTINUOUS or scenario_mode == NonlinearMode.QUADRATIC_FAV_CONTINUOUS:
             self.fav_continuous = True
-        elif non_linear_mode == NonlinearMode.SIGMOID_FAV_DISCRETE or non_linear_mode == NonlinearMode.QUADRATIC_FAV_DISCRETE:
+        elif scenario_mode == NonlinearMode.SIGMOID_FAV_DISCRETE or scenario_mode == NonlinearMode.QUADRATIC_FAV_DISCRETE:
             self.fav_continuous = False
 
         # parse through modes to define scenario configs
-        if non_linear_mode == NonlinearMode.QUADRATIC_FAV_CONTINUOUS or non_linear_mode == NonlinearMode.QUADRATIC_FAV_DISCRETE:
+        if scenario_mode == NonlinearMode.QUADRATIC_FAV_CONTINUOUS or scenario_mode == NonlinearMode.QUADRATIC_FAV_DISCRETE:
             self.fn_class = Quadratic
-        elif non_linear_mode == NonlinearMode.SIGMOID_FAV_CONTINUOUS or non_linear_mode == NonlinearMode.SIGMOID_FAV_DISCRETE:
+        elif scenario_mode == NonlinearMode.SIGMOID_FAV_CONTINUOUS or scenario_mode == NonlinearMode.SIGMOID_FAV_DISCRETE:
             self.fn_class = Sigmoid
 
         discrete_factors, continuous_factors, representations = self._load_data(random_state, num_factors)
@@ -63,7 +63,7 @@ class NonlinearDataHolder(DataHolder):
         pass
 
     @staticmethod
-    def get_expected_len(num_factors, val_per_factor, k):
+    def get_expected_len(num_factors, val_per_factor, k, nonlinear_mode):
         return k * val_per_factor ** num_factors
 
     def _load_data(self, random_state, num_factors):
