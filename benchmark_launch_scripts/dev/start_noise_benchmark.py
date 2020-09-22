@@ -63,21 +63,25 @@ config_funcs = [ConfigIRS,
 
 noise_modes = [NoiseMode.NOISE_DECAY,
                NoiseMode.NOISE_DECAY_EXTRA_Z,
-               NoiseMode.EXTRA_Z_COLLAPSED_TO_UNCOLLAPSED]
+               NoiseMode.EXTRA_Z_COLLAPSED_TO_UNCOLLAPSED,
+               NoiseMode.MORE_ZS]
 
 if __name__ == "__main__": 
     process_mode = "mp"  # debug or mp
     num_factors = 3
     val_per_factor = 10 
-    n_seeds = 20
+    n_seeds = 10
 
     # params
-    ks = [1, 8]
-    alphas = np.arange(0, 1.01, 0.2)
-    alphas = [float("{:.2f}".format(a)) for a in alphas]
-
     for noise_mode in noise_modes:
         all_results = {}
+
+        ks = [1, 8]
+        if noise_mode == NoiseMode.MORE_ZS:
+            alphas = np.arange(0, 6, 1)
+        else:
+            alphas = np.arange(0, 1.01, 0.2)
+            alphas = [float("{:.2f}".format(a)) for a in alphas]
 
         for f in config_funcs:
             results_dict = benchmark_main(dataholder_class=NoiseDataHolder,

@@ -78,9 +78,12 @@ def compute_beta_vae_sklearn(dataholder,
   logging.info("Evaluate evaluation set accuracy.")
   eval_accuracy = model.score(eval_points, eval_labels)
   logging.info("Evaluation set accuracy: %.2g", eval_accuracy)
+
+
   scores_dict = {}
-  scores_dict["BVAE_train_accuracy"] = train_accuracy
-  scores_dict["BVAE_eval_accuracy"] = eval_accuracy
+  n_factors = dataholder.factors.shape[1]
+  scores_dict["BVAE_train_accuracy"] = (train_accuracy - 1/n_factors)/((n_factors - 1) / n_factors)
+  scores_dict["BVAE_eval_accuracy"] = (eval_accuracy - 1/n_factors)/((n_factors - 1) / n_factors)
   return scores_dict
 
 

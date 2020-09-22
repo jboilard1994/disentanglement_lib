@@ -65,8 +65,7 @@ def compute_modularity_explicitness(dataholder,
     all_ys = np.transpose(dataholder.factors)
 
     #New score
-    discretized_mus, bins0 = utils.make_discretizer(all_mus, dataholder.cumulative_dist)
-    mutual_information = utils.discrete_mutual_info(discretized_mus, all_ys)
+    mutual_information = get_MI_matrix(dataholder, all_mus, all_ys)
     # Mutual information should have shape [num_codes, num_factors].
     assert mutual_information.shape[0] == mus_train.shape[0]
     assert mutual_information.shape[1] == ys_train.shape[0]
@@ -77,13 +76,11 @@ def compute_modularity_explicitness(dataholder,
     # So we get results for whole dataset, train-set, and test set.
 
     #old score 1
-    discretized_mus, bins1 = utils.make_discretizer(mus_train, dataholder.cumulative_dist)
-    mutual_information = utils.discrete_mutual_info(discretized_mus, ys_train)
+    mutual_information = get_MI_matrix(dataholder, mus_train, ys_train)
     scores["MODEX_modularity_oldtrain_score"] = modularity(mutual_information)
 
     #old score 2
-    discretized_mus, bins2 = utils.make_discretizer(mus_test, dataholder.cumulative_dist)
-    mutual_information = utils.discrete_mutual_info(discretized_mus, ys_test)
+    mutual_information = get_MI_matrix(dataholder, mus_test, ys_test)
     scores["MODEX_modularity_oldtest_score"] = modularity(mutual_information)
 
     explicitness_score_train = np.zeros([ys_train.shape[0], 1])
@@ -106,6 +103,16 @@ def compute_modularity_explicitness(dataholder,
     scores["MODEX_explicitness_score_train"] = np.mean(explicitness_score_train)
     scores["MODEX_explicitness_score_test"] = np.mean(explicitness_score_test)
     return scores
+
+def get_MI_matrix(dataholder, mus, ys):
+    """Computes score based on both training and testing codes and factors."""
+    score_dict = {}
+    m = np.zeros((mus.shape[0], ys.shape[0]))
+    for j, y_train in enumerate(ys):
+        discretized_mus, bins = utils.make_discretizer(mus, dataholder.cumulative_dist[j])
+        m[:, j] = utils.discrete_mutual_info(discretized_mus, ys[j].reshape((1, -1))).flatten()
+        pass
+    return m
 
 
 def explicitness_per_factor(random_state, mus_train, y_train, mus_test, y_test):

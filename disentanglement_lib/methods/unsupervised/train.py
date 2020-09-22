@@ -119,7 +119,7 @@ def train(model_dir,
 
   # Do the actual training.
   tpu_estimator.train(
-      input_fn=_make_input_fn(dataset, random_state.randint(2**32)),
+      input_fn=_make_input_fn(dataset, random_state.randint(2**16)),
       steps=training_steps)
 
   # Save model as a TFHub module.
@@ -134,7 +134,7 @@ def train(model_dir,
   # these files will be available for analysis at the end.
   results_dict = tpu_estimator.evaluate(
       input_fn=_make_input_fn(
-          dataset, random_state.randint(2**32), num_batches=eval_steps))
+          dataset, random_state.randint(2**16), num_batches=eval_steps))
   results_dir = os.path.join(model_dir, "results")
   results_dict["elapsed_time"] = time.time() - experiment_timer
   results.update_result_directory(results_dir, "train", results_dict)

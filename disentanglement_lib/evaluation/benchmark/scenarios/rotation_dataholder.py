@@ -90,10 +90,7 @@ class RotationDataHolder(DataHolder):
             # Generate a continuous feature from binning possible range.
             continuous_features = []
             for i, d_feature in enumerate(discrete_features):
-
-                continuous_vals = random_state.uniform(factor_d_bins[i][d_feature][0],  # min
-                                                       factor_d_bins[i][d_feature][1])  # max
-
+                continuous_vals = (factor_d_bins[i][d_feature][0] + factor_d_bins[i][d_feature][1]) / 2
                 continuous_features.append(continuous_vals)
                 pass
             continuous_factors.append(continuous_features)

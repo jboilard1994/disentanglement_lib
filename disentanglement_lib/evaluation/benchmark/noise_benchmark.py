@@ -23,7 +23,6 @@ import multiprocessing as mp
 import gin
 
 
-
 from disentanglement_lib.evaluation.benchmark.metrics import beta_vae 
 from disentanglement_lib.evaluation.benchmark.metrics import dci
 from disentanglement_lib.evaluation.benchmark.metrics import factor_vae
@@ -98,7 +97,7 @@ def benchmark_main(dataholder_class, config_fn, num_factors, val_per_factor, sce
                 index_dict = {'K': K, 'alpha': alpha, 'seed': seed, 'f': str(config_fn.get_metric_fn_id()[0])}
                 
                 if process_mode == "debug": # allows breakpoint debug.
-                    result_dicts_list.append(test_metric(config_fn, num_factors, val_per_factor, index_dict, q, scenario_mode))
+                    result_dicts_list.append(test_metric(dataholder_class, config_fn, num_factors, val_per_factor, index_dict, q, scenario_mode))
                     print(result_dicts_list[-1])
                     
                 elif process_mode == "mp": 

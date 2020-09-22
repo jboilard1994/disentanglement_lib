@@ -54,36 +54,56 @@ def compute_wdg(dataholder,
       random_state, num_train)
     assert mus_train.shape[1] == num_train
 
-    discretized_mus, bins = utils.make_discretizer(mus_train, dataholder.cumulative_dist)
-    return _compute_wdg(discretized_mus, ys_train, bins)
+    return _compute_wdg(dataholder, mus_train, ys_train)
 
 
-def _compute_wdg(discretized_mus, ys_train, bins):
+def _compute_wdg(dataholder, mus_train, ys_train):
     """Computes score based on both training and testing codes and factors."""
     score_dict = {}
 
-    wd_matrix = get_wasserstein_dependency_matrix(discretized_mus, bins, ys_train)
+    wd_matrix = get_wasserstein_dependency_matrix(dataholder, mus_train, ys_train)
 
     sorted_wd = np.sort(wd_matrix, axis=0)[::-1]
     score_dict["WDG_score"] = np.mean(sorted_wd[0, :] - sorted_wd[1, :])
 
     return score_dict
-          
-          
-def get_wasserstein_dependency_matrix(discretized_mus, bins, ys_train):
-    wd_matrix = np.zeros((len(discretized_mus), len(ys_train)))
-    mid_bins = utils.get_middle_bins(bins)
 
+
+def preprocess_discretizations(mus_train, cum_distribution):
+    discretizations = []
+    for j, j_cum_distribution in enumerate(cum_distribution):
+        discretized_mus, bins = utils.make_discretizer(mus_train, j_cum_distribution)
+        discretizations.append([discretized_mus, bins])
+    return discretizations
+
+
+def get_wasserstein_dependency_matrix(dataholder, mus_train, ys_train):
+    wd_matrix = np.zeros((len(mus_train), len(ys_train)))
+    discretizations = preprocess_discretizations(mus_train, dataholder.cumulative_dist)
+
+    """
+    mid_bins = utils.get_middle_bins(bins)
     z_bin_odds = []
     # Get odds q(z) of all z_i feature values in discretized_mus
     for z_bins in discretized_mus:
         z_bin_counts = np.bincount(z_bins, minlength=len(mid_bins))
         bin_odds = z_bin_counts/np.sum(z_bin_counts)
-        z_bin_odds.append(bin_odds)
+        z_bin_odds.append(bin_odds)"""
 
     # Get empirical odds of q(z|y) and compute W1( q(z) | q(z|y) )
-    for i, code_vals in enumerate(discretized_mus):
+    for i, code_vals in enumerate(mus_train):
         for j, factor_vals in enumerate(ys_train):
+
+            discretized_mus, bins = discretizations[j]
+            mid_bins = utils.get_middle_bins(bins)
+
+            z_bin_odds = []
+            # Get odds q(z) of all z_i feature values in discretized_mus
+            for z_bins in discretized_mus:
+                z_bin_counts = np.bincount(z_bins, minlength=len(mid_bins))
+                bin_odds = z_bin_counts / np.sum(z_bin_counts)
+                z_bin_odds.append(bin_odds)
+
             y_bins, counts = np.unique(factor_vals, return_counts=True)
             y_odds = counts/np.sum(counts)
 
@@ -91,7 +111,7 @@ def get_wasserstein_dependency_matrix(discretized_mus, bins, ys_train):
             wd = 0
             for y_bin, y_odd in zip(y_bins, y_odds):
                 inds = np.argwhere(factor_vals == y_bin)
-                eval_z = code_vals[inds].flatten()
+                eval_z = discretized_mus[i][inds].flatten()
                  
                 counts = np.bincount(eval_z, minlength=len(mid_bins[i]))  # force n_bins for good unique count
                 z_cond_y_bin_odds = counts/np.sum(counts)

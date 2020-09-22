@@ -50,14 +50,18 @@ def compute_dcimig(dataholder,
       random_state, num_train)
     assert mus_train.shape[1] == num_train
 
-    discretized_mus, bins = utils.make_discretizer(mus_train, dataholder.cumulative_dist)
-    return _compute_dcimig(discretized_mus, ys_train)
+    return _compute_dcimig(dataholder, mus_train, ys_train)
 
 
-def _compute_dcimig(discretized_mus, ys_train):
+def _compute_dcimig(dataholder, mus_train, ys_train):
     """Computes score."""
     score_dict = {}
-    m = utils.discrete_mutual_info(discretized_mus, ys_train)
+    m = np.zeros((mus_train.shape[0], ys_train.shape[0]))
+    for j, y_train in enumerate(ys_train):
+        discretized_mus, bins = utils.make_discretizer(mus_train, dataholder.cumulative_dist[j])
+        m[:, j] = utils.discrete_mutual_info(discretized_mus, ys_train[j].reshape((1, -1))).flatten()
+        pass
+
     assert m.shape[0] == discretized_mus.shape[0]
     assert m.shape[1] == ys_train.shape[0]
 

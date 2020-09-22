@@ -38,10 +38,14 @@ def make_violin_plot(violin_data, labels, fn_results_list, metric_names, num_fac
             param_list, param_dict = get_list_dict_from_ids(fn_results_list,
                                                             np.argwhere((grouped_dict["extra_params"] == extra_params).all(-1)))
             scores = [dict_["score"][m_name] for dict_ in param_list]
-            legend_str = ""
-            for index, index_name in zip(extra_params, grouped_dict["param_names"]):
-                legend_str = legend_str + "{}_{} ".format(index_name, index)
-            label = "{}_{}".format(m_name, legend_str)
+            if mode == "all":
+                legend_str = ""
+                for index, index_name in zip(extra_params, grouped_dict["param_names"]):
+                    legend_str = legend_str + "{}_{} ".format(index_name, index)
+                label = "{}_{}".format(m_name, legend_str)
+            else:
+                label = m_name
+
             metric_data.append(scores)
             metric_labels.append(label)
     #one element per metric.

@@ -54,8 +54,8 @@ class ConfigIRS(GenericConfigIRS):
         pass
 
     def get_extra_params(self):
-        extra_params = [["@histogram_discretizer", "@percentile_discretizer"]]
-        param_ids = [["@histogram_discretizer"], ["@percentile_discretizer"]]
+        extra_params = [["@histogram_discretizer"]]
+        param_ids = [["@histogram_discretizer"]]
         param_names = [["Discretizer Function"]]
         return param_ids, extra_params, param_names
 

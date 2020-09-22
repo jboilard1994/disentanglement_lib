@@ -96,10 +96,7 @@ class ModCompactDataHolder(DataHolder):
             # Generate a continuous feature from binning possible range.
             continuous_features = []
             for i, d_feature in enumerate(discrete_features):
-
-                continuous_vals = random_state.uniform(factor_d_bins[i][d_feature][0],  # min
-                                                       factor_d_bins[i][d_feature][1])  # max
-
+                continuous_vals = (factor_d_bins[i][d_feature][0] + factor_d_bins[i][d_feature][1]) / 2
                 continuous_features.append(continuous_vals)
                 pass
 
@@ -124,12 +121,12 @@ class ModCompactDataHolder(DataHolder):
             R[num_factors-1, num_factors-1] = 0                              # | 0 1 0 |
 
         if self.mod_compact_mode == ModCompactMode.TEST_COMPACT_MISSING_CHECK:  # | 1 0 0 |
-            R[num_factors-2, num_factors-1] = 1                                # | 0 1 1 |
-            R[num_factors-1, num_factors-1] = 0                                # | 0 0 0 |
+            R[num_factors-2, num_factors-1] = 1                                 # | 0 1 1 |
+            R[num_factors-1, num_factors-1] = 0                                 # | 0 0 0 |
 
-        if self.mod_compact_mode == ModCompactMode.TEST_MOD_REDUCE:              # | 1 0 |
-            R1 = np.identity(int(num_factors/2))                                     # | 0 1 |
-            R2 = np.identity(int(num_factors/2))*alpha                               # | a 0 |
+        if self.mod_compact_mode == ModCompactMode.TEST_MOD_REDUCE:             # | 1 0 |
+            R1 = np.identity(int(num_factors/2))                                # | 0 1 |
+            R2 = np.identity(int(num_factors/2))*alpha                          # | a 0 |
             R = np.concatenate((R1, R2), axis=0)                                # | 0 a | # doubles num_factors (example has 2*2 factors, 2 codes)
 
         if self.mod_compact_mode == ModCompactMode.TEST_COMPACT_REDUCE:          # | 1 0 0 a 0 0 |

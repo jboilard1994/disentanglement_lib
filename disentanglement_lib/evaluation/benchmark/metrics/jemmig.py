@@ -51,33 +51,44 @@ def compute_jemmig(dataholder,
     mus_train, ys_train = utils.generate_batch_factor_code(dataholder, num_train, random_state, num_train)
     assert mus_train.shape[1] == num_train
 
-    discretized_mus, bins = utils.make_discretizer(mus_train, dataholder.cumulative_dist)
-    return _compute_jemmig(discretized_mus, ys_train)
+    return _compute_jemmig(dataholder, mus_train, ys_train)
 
 
-def _compute_jemmig(discretized_mus, ys_train):
+def _compute_jemmig(dataholder, mus_train, ys_train):
     """Computes score based on both training and testing codes and factors."""
     score_dict = {}
 
-    n_bins = np.max(discretized_mus) +1
-    m = utils.discrete_mutual_info(discretized_mus, ys_train)
+    # Get Mi Matrix.
+    # Since percentile discretization has the potential of different discretizations of a code depending of the factor,
+    # save all variants of discrete_zs, n_bins, entropy_z. Variants are combinations of codes and factors.
+    discrete_mus = np.zeros((mus_train.shape[0], ys_train.shape[0], ys_train.shape[1]))  # shape --> [I,J,M]
+    entropy_zs = np.zeros((mus_train.shape[0], ys_train.shape[0]))  # shape --> [I,J]
+    m = np.zeros((mus_train.shape[0], ys_train.shape[0]))
+    for j, y_train in enumerate(ys_train):
+        disc_mus, bins = utils.make_discretizer(mus_train, dataholder.cumulative_dist[j])
+        entropy_zs[:, j] = utils.discrete_entropy(disc_mus)
+        m[:, j] = utils.discrete_mutual_info(disc_mus, ys_train[j].reshape((1, -1))).flatten()
+        discrete_mus[:, j, :] = disc_mus
+        pass
 
-    assert m.shape[0] == discretized_mus.shape[0]
+    assert m.shape[0] == discrete_mus.shape[0]
     assert m.shape[1] == ys_train.shape[0]
     # m is [num_latents, num_factors]
 
-    entropy_ys = utils.discrete_entropy(ys_train)
-    entropy_zs = utils.discrete_entropy(discretized_mus)
-    entropy_zs_max = utils.discrete_entropy(np.arange(n_bins, dtype=np.int32).reshape((1,-1)))
+    # Calculate other elements needed for score computation, which do not differ between combinations of code/factor
+    n_bins = np.max(discrete_mus, axis=(0, 2)) + 1
+    entropy_zs_max = np.array([utils.discrete_entropy(np.arange(_n_bins, dtype=np.int32).reshape((1, -1))) for _n_bins in n_bins])
     sorted_m = np.sort(m, axis=0)[::-1]
+    entropy_ys = utils.discrete_entropy(ys_train)
 
+    # Compute scores
     unnormalized_results = np.zeros((ys_train.shape[0],))
     normalized_results = np.zeros((ys_train.shape[0],))
-    for i, yz_mi in enumerate(m.T):
+    for j, yz_mi in enumerate(m.T):
         argmax_z = np.argmax(yz_mi)
-        joint_entropy = utils.discrete_joint_entropy(discretized_mus[argmax_z,:], ys_train[i,:])
-        unnormalized_results[i] = joint_entropy - sorted_m[0, i] + sorted_m[1, i]
-        normalized_results[i] = np.abs((entropy_zs[argmax_z] + entropy_ys[i] - 2*sorted_m[0, i] + sorted_m[1, i])/(entropy_zs_max + entropy_ys[i]) - 1)
+        joint_entropy = utils.discrete_joint_entropy(discrete_mus[argmax_z, j, :], ys_train[j, :])
+        unnormalized_results[j] = joint_entropy - sorted_m[0, j] + sorted_m[1, j]
+        normalized_results[j] = np.abs((entropy_zs[argmax_z, j] + entropy_ys[j] - 2*sorted_m[0, j] + sorted_m[1, j])/(entropy_zs_max[j] + entropy_ys[j]) - 1)
         pass
 
     score_dict["JEMMIG_score"] = np.mean(unnormalized_results)

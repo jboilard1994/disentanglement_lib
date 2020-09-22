@@ -182,7 +182,7 @@ def _percentile_histogram_discretize(target, num_bins, cumulative_dist):
     all_bins = []
 
     for i in range(target.shape[0]):
-        percentiles = cumulative_dist[i]*100
+        percentiles = cumulative_dist*100
 
         if percentiles[0] < 0: percentiles[0] = 0
         if percentiles[-1] > 100: percentiles[-1] = 100

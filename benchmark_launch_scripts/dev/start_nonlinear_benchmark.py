@@ -61,13 +61,12 @@ config_funcs = [ConfigRFVAE,
                 ConfigJEMMIG,
                 ConfigMIGSUP]
 
-nonlinear_modes = [NonlinearMode.SIGMOID_FAV_CONTINUOUS,
-                   NonlinearMode.QUADRATIC_FAV_CONTINUOUS]
+nonlinear_modes = [NonlinearMode.SIGMOID]
 
 if __name__ == "__main__":
     num_factors = 3
     val_per_factor = 10 
-    n_seeds = 20
+    n_seeds = 10
     process_mode = "mp"  # "debug" or "mp" (multi-process)
 
     for nonlinear_mode in nonlinear_modes:

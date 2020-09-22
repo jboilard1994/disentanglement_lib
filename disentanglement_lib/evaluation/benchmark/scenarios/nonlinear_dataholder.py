@@ -30,10 +30,8 @@ from enum import Enum
 
 # Single non-linear config
 class NonlinearMode(Enum):
-    SIGMOID_FAV_CONTINUOUS = 1
-    SIGMOID_FAV_DISCRETE = 2
-    QUADRATIC_FAV_CONTINUOUS = 3
-    QUADRATIC_FAV_DISCRETE = 4
+    SIGMOID = 1
+    QUADRATIC = 2
 
 
 class NonlinearDataHolder(DataHolder):
@@ -46,16 +44,10 @@ class NonlinearDataHolder(DataHolder):
         # self.n_extra_z = n_extra_z
         self.factor_sizes = [val_per_factor] * num_factors
 
-        # parse through noise modes to define scenario configs
-        if scenario_mode == NonlinearMode.SIGMOID_FAV_CONTINUOUS or scenario_mode == NonlinearMode.QUADRATIC_FAV_CONTINUOUS:
-            self.fav_continuous = True
-        elif scenario_mode == NonlinearMode.SIGMOID_FAV_DISCRETE or scenario_mode == NonlinearMode.QUADRATIC_FAV_DISCRETE:
-            self.fav_continuous = False
-
         # parse through modes to define scenario configs
-        if scenario_mode == NonlinearMode.QUADRATIC_FAV_CONTINUOUS or scenario_mode == NonlinearMode.QUADRATIC_FAV_DISCRETE:
+        if scenario_mode == NonlinearMode.QUADRATIC:
             self.fn_class = Quadratic
-        elif scenario_mode == NonlinearMode.SIGMOID_FAV_CONTINUOUS or scenario_mode == NonlinearMode.SIGMOID_FAV_DISCRETE:
+        elif scenario_mode == NonlinearMode.SIGMOID:
             self.fn_class = Sigmoid
 
         discrete_factors, continuous_factors, representations = self._load_data(random_state, num_factors)
@@ -108,13 +100,7 @@ class NonlinearDataHolder(DataHolder):
             # Generate a continuous feature from binning possible range.
             continuous_features = []
             for i, d_feature in enumerate(discrete_features):
-
-                if self.fav_continuous:
-                    continuous_vals = random_state.uniform(factor_d_bins[i][d_feature][0],  # min
-                                                                factor_d_bins[i][d_feature][1])  # max
-                else:
-                    continuous_vals = (factor_d_bins[i][d_feature][0] + factor_d_bins[i][d_feature][1]) / 2
-
+                continuous_vals = (factor_d_bins[i][d_feature][0] + factor_d_bins[i][d_feature][1]) / 2
                 continuous_features.append(continuous_vals)
 
             continuous_factors.append(continuous_features)

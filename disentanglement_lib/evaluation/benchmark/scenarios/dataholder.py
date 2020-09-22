@@ -30,7 +30,7 @@ class DataHolder:
         else:
             self.sampling = GenericSampling(self.factor_sizes, self.factors_indices, self.factors, list(range(len(self.factors))))
 
-        self.cumulative_dist = _get_discrete_cumulative_distributions(discrete_factors)
+        self.cumulative_dist, self.dists = _get_discrete_cumulative_distributions(discrete_factors)
         pass
 
 
@@ -123,6 +123,7 @@ class DataHolder:
 
 def _get_discrete_cumulative_distributions(discrete_targets):
     cum_dists = []
+    dists = []
     for i in range(discrete_targets.shape[1]):
         # get distributions first
         counts = np.bincount(discrete_targets[:, i])
@@ -135,5 +136,6 @@ def _get_discrete_cumulative_distributions(discrete_targets):
 
         cum_dist = np.insert(cum_dist, 0, 0)
         cum_dists.append(cum_dist)
+        dists.append(dist)
 
-    return cum_dists
+    return cum_dists, dists

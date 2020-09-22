@@ -51,14 +51,17 @@ def compute_mig_sup(dataholder,
     mus_train, ys_train = utils.generate_batch_factor_code(dataholder, num_train, random_state, num_train)
     assert mus_train.shape[1] == num_train
 
-    discretized_mus, bins = utils.make_discretizer(mus_train, dataholder.cumulative_dist)
-    return _compute_mig_sup(discretized_mus, ys_train)
+    return _compute_mig_sup(dataholder, mus_train, ys_train)
 
 
-def _compute_mig_sup(discretized_mus, ys_train):
+def _compute_mig_sup(dataholder, mus_train, ys_train):
     """Computes score based on both training and testing codes and factors."""
     score_dict = {}
-    m = utils.discrete_mutual_info(discretized_mus, ys_train)
+    m = np.zeros((mus_train.shape[0], ys_train.shape[0]))
+    for j, y_train in enumerate(ys_train):
+        discretized_mus, bins = utils.make_discretizer(mus_train, dataholder.cumulative_dist[j])
+        m[:, j] = utils.discrete_mutual_info(discretized_mus, ys_train[j].reshape((1, -1))).flatten()
+        pass
 
     # m is [num_latents, num_factors]
     assert m.shape[0] == discretized_mus.shape[0]

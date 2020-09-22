@@ -11,7 +11,8 @@ from disentanglement_lib.config.benchmark.scenarios.bindings import Metrics
 def get_table_meanstd_info(fn_results_list,
                            metric_names,
                            num_factors,
-                           val_per_factor):
+                           val_per_factor,
+                           param_names=True):
     pd_indexes = {}
     rows_data = {}
     all_means = {}
@@ -54,7 +55,11 @@ def get_table_meanstd_info(fn_results_list,
                 for index, index_name in zip(extra_params, grouped_dict["param_names"]):
                     index_str = index_str + "{} = {} ".format(index_name, index)
 
-                pd_indexes[k].append("{} {}".format(m_name, index_str))
+                if param_names == True:
+                    pd_indexes[k].append("{} {}".format(m_name, index_str))
+                else:
+                    pd_indexes[k].append(m_name)
+
                 rows_data[k].append(mean_std_strs)
 
     return rows_data, pd_indexes, all_means, all_stds
@@ -192,9 +197,9 @@ def make_graphs(results_dict_list, num_factors, val_per_factor, scenario_mode):
         if len(metric_names) > 0:
             make_violin_plot(fn_results_list, metric_names, num_factors, val_per_factor, scenario_mode)
 
-            rows_data, pd_indexes, means, stds = get_table_meanstd_info(fn_results_list, metric_names, num_factors,val_per_factor)
+            rows_data, pd_indexes, means, stds = get_table_meanstd_info(fn_results_list, metric_names, num_factors, val_per_factor)
             rows_data_2, pd_indexes_2, means_2, stds_2 = get_table_meanstd_info(fn_results_list, metric_parsed_names, num_factors,
-                                                                                val_per_factor)
+                                                                                val_per_factor, param_names=False)
 
             # All functions append the mean-std table.
             for K in grouped_dict["unique_ks"]:

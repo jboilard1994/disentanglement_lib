@@ -87,8 +87,9 @@ def compute_rf_vae(dataholder,
     eval_accuracy = np.sum(eval_votes[classifier, other_index]) * 1. / np.sum(eval_votes)
 
     logging.info("Evaluation set accuracy: %.2g", eval_accuracy)
-    scores_dict["RFVAE_train_accuracy"] = train_accuracy
-    scores_dict["RFVAE_eval_accuracy"] = eval_accuracy
+    n_factors = dataholder.factors.shape[1]
+    scores_dict["RFVAE_train_accuracy"] = (train_accuracy - 1/n_factors)/((n_factors - 1) / n_factors)
+    scores_dict["RFVAE_eval_accuracy"] = (eval_accuracy - 1/n_factors)/((n_factors - 1) / n_factors)
     scores_dict["num_active_dims"] = len(active_dims)
     return scores_dict
 
