@@ -25,6 +25,7 @@ from disentanglement_lib.evaluation.benchmark.scenarios.dataholder import DataHo
 from sklearn.utils.extmath import cartesian
 import numpy as np
 from enum import Enum
+from itertools import combinations
 
 
 class RotationMode(Enum):
@@ -36,12 +37,11 @@ class RotationDataHolder(DataHolder):
     Dataset where dummy factors are also the observations, with ratio of noise to relationship between code/factors."""
 
     def __init__(self, random_state, alpha, scenario_mode, num_factors=2, val_per_factor=10, K=None, n_extra_z=5):
-        self.theta = alpha
         self.val_per_factor = val_per_factor
         self.rotation_mode = scenario_mode
         self.factor_sizes = [val_per_factor]*num_factors
 
-        discrete_factors, continuous_factors, representations = self._load_data(random_state, num_factors, alpha)
+        discrete_factors, continuous_factors, representations = self._load_data(random_state, num_factors)
         DataHolder.__init__(self, discrete_factors, continuous_factors, representations)
         pass
     
@@ -49,7 +49,7 @@ class RotationDataHolder(DataHolder):
     def get_expected_len(num_factors, val_per_factor, k, rotation_mode):
         return k*val_per_factor**num_factors
 
-    def _load_data(self, random_state, num_factors, theta):
+    def _load_data(self, random_state, num_factors):
         """Author : Jonathan Boilard 2020
         Creates artificial dataset.
 
@@ -76,9 +76,20 @@ class RotationDataHolder(DataHolder):
 
             factor_d_bins.append(discrete_bins)
 
-        # Define relationship between factor features (observation) and representation
-        R = np.identity(num_factors)
-        rotation_matrix = np.array([[np.cos(theta), -np.sin(theta)], [np.sin(theta), np.cos(theta)]])
+        # build global rotation matrix by rotating each possible pairs of axis
+        R_mat = np.identity(num_factors)
+        pairs = combinations(range(num_factors), 2)
+        for p in pairs:
+            theta = random_state.uniform(-90, 90)
+            base_rot = np.array([[np.cos(theta), -np.sin(theta)], [np.sin(theta), np.cos(theta)]])
+            p = list(p)
+            R = np.identity(num_factors)
+            R[p[0], p[0]] = base_rot[0, 0]
+            R[p[0], p[1]] = base_rot[0, 1]
+            R[p[1], p[0]] = base_rot[1, 0]
+            R[p[1], p[1]] = base_rot[1, 1]
+            R_mat = np.matmul(R_mat, R)
+
 
         # Get random binned continuous factor values and get representations
         continuous_factors = []
@@ -99,11 +110,7 @@ class RotationDataHolder(DataHolder):
         # Representation is a pair-wise rotation of continuous factors.
         for continuous_features in continuous_factors:
             # do rotation
-            n_pairs = np.floor(num_factors/2).astype(np.int32)
-            rot_rep = np.matmul(continuous_features, R)
-
-            for i_pair in range(n_pairs):
-                rot_rep[i_pair*2:i_pair*2 + 2] = np.matmul(rot_rep[i_pair*2 : i_pair*2 +2], rotation_matrix)
-            representations.append(rot_rep)
+            rep = np.matmul(continuous_features, R_mat)
+            representations.append(rep)
 
         return np.array(discrete_factors), np.array(continuous_factors), np.array(representations)

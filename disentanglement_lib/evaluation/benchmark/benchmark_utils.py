@@ -23,13 +23,13 @@ def get_names(f_key, mode=""):
         elif f_key == Metrics.DCIMIG:
             names = ["DCIMIG_normalized"]  # , "DCIMIG_unnormalized"]
         elif f_key == Metrics.DCI_RF_CLASS:
-            names = ["DCI_RF_class_completeness", "DCI_RF_class_disentanglement", "DCI_RF_class_informativeness_test"]  # "DCI_RF_class_informativeness_train"]
+            names = ["DCI_RF_class_completeness", "DCI_RF_class_disentanglement", "DCI_RF_class_informativeness_test", "DCI_RF_class_informativeness_train"]  # "DCI_RF_class_informativeness_train"]
         elif f_key == Metrics.DCI_RF_REG:
-            names = ["DCI_RF_reg_completeness", "DCI_RF_reg_disentanglement", "DCI_RF_reg_informativeness_test"]  # , "DCI_RF_reg_informativeness_train"]
+            names = ["DCI_RF_reg_completeness", "DCI_RF_reg_disentanglement", "DCI_RF_reg_informativeness_test", "DCI_RF_reg_informativeness_train"]  # , "DCI_RF_reg_informativeness_train"]
         elif f_key == Metrics.DCI_LOGREGL1:
-            names = ["DCI_LogRegL1_completeness", "DCI_LogRegL1_disentanglement", "DCI_LogRegL1_informativeness_test"]  # , "DCI_LogRegL1_informativeness_train"]
+            names = ["DCI_LogRegL1_completeness", "DCI_LogRegL1_disentanglement", "DCI_LogRegL1_informativeness_test", "DCI_LogRegL1_informativeness_train"]  # , "DCI_LogRegL1_informativeness_train"]
         elif f_key == Metrics.DCI_LASSO:
-            names = ["DCI_Lasso_completeness", "DCI_Lasso_disentanglement", "DCI_Lasso_informativeness_test"]  # , "DCI_Lasso_informativeness_train"]
+            names = ["DCI_Lasso_completeness", "DCI_Lasso_disentanglement", "DCI_Lasso_informativeness_test", "DCI_Lasso_informativeness_train"]  # , "DCI_Lasso_informativeness_train"]
         elif f_key == Metrics.SAP_DISCRETE:
             names = ["SAP_discrete"]  # , "SAP_discrete_train"]
         elif f_key == Metrics.JEMMIG:
@@ -141,7 +141,7 @@ def get_dict_element(d, indexes):
         return get_dict_element(d[index], indexes)
 
 
-def manage_processes(processes, queue, max_process=10):
+def manage_processes(processes, queue, max_process=2):
     """ @author: jboilard 
     from a list of already set processes, manage processes
     starts processes up to a certain maximum number of processes
@@ -181,5 +181,4 @@ def manage_processes(processes, queue, max_process=10):
             if not i in ended_processes_idx:
                 new_active_processes.append(active_processes[i])
         active_processes = new_active_processes
-
     return return_dicts

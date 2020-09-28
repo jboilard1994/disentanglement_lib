@@ -40,7 +40,7 @@ from disentanglement_lib.config.benchmark.scenarios.rotation_bindings import Con
 
 from disentanglement_lib.evaluation.benchmark.noise_benchmark import benchmark_main
 from disentanglement_lib.evaluation.benchmark.scenarios.rotation_dataholder import RotationMode, RotationDataHolder
-from disentanglement_lib.evaluation.benchmark.graphing import alpha_parameterized_graphing
+from disentanglement_lib.evaluation.benchmark.graphing import parameter_free_graphing
 
 import pickle
 
@@ -69,8 +69,8 @@ if __name__ == "__main__":
     val_per_factor = 10
     n_seeds = 20
 
-    thetas = np.arange(0, np.pi / 4 + np.pi / 20, np.pi / 20)
-    thetas = [float("{:.2f}".format(a)) for a in thetas]
+
+    alphas = [0]
 
     for rotation_mode in rotation_modes:
         all_results = {}
@@ -81,7 +81,7 @@ if __name__ == "__main__":
                                           num_factors=num_factors,
                                           val_per_factor=val_per_factor,
                                           scenario_mode=rotation_mode,
-                                          alphas=thetas,
+                                          alphas=alphas,
                                           nseeds=n_seeds,
                                           process_mode=process_mode)
 
@@ -92,7 +92,7 @@ if __name__ == "__main__":
                 pickle.dump([rotation_mode, all_results], open("./pickled_results/{}.p".format(str(rotation_mode)), "wb"))
                 pass
 
-        alpha_parameterized_graphing.make_graphs(all_results, num_factors, val_per_factor, rotation_mode)
+        parameter_free_graphing.make_graphs(all_results, num_factors, val_per_factor, rotation_mode)
 
 
 

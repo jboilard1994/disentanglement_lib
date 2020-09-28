@@ -63,8 +63,7 @@ config_funcs = [ConfigIRS,
 
 noise_modes = [NoiseMode.NOISE_DECAY,
                NoiseMode.NOISE_DECAY_EXTRA_Z,
-               NoiseMode.EXTRA_Z_COLLAPSED_TO_UNCOLLAPSED,
-               NoiseMode.MORE_ZS]
+               NoiseMode.IGNORE_FACTORS]
 
 if __name__ == "__main__": 
     process_mode = "mp"  # debug or mp
@@ -77,8 +76,9 @@ if __name__ == "__main__":
         all_results = {}
 
         ks = [1, 8]
-        if noise_mode == NoiseMode.MORE_ZS:
-            alphas = np.arange(0, 6, 1)
+        if noise_mode == NoiseMode.IGNORE_FACTORS:
+            num_factors = 5
+            alphas = np.arange(0, num_factors-1, 1)
         else:
             alphas = np.arange(0, 1.01, 0.2)
             alphas = [float("{:.2f}".format(a)) for a in alphas]
