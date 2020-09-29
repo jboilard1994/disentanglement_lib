@@ -141,7 +141,7 @@ def get_dict_element(d, indexes):
         return get_dict_element(d[index], indexes)
 
 
-def manage_processes(processes, queue, max_process=2):
+def manage_processes(processes, queue, max_process=8):
     """ @author: jboilard 
     from a list of already set processes, manage processes
     starts processes up to a certain maximum number of processes

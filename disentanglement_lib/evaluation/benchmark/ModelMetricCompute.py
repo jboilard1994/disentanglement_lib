@@ -6,7 +6,9 @@ from disentanglement_lib.evaluation.benchmark.scenarios.tensorflow_dataholder im
 def test_metric(discrete_factors, representations, index_dict, config_class, queue):
     # Get run parameters
     seed = index_dict["seed"]
+    alpha = index_dict["alpha"]
     f = index_dict["f"]
+    K = index_dict["K"]
     n_bins = 300
 
     config_ = config_class()
@@ -31,7 +33,7 @@ def test_metric(discrete_factors, representations, index_dict, config_class, que
 
         # Get scores and save in matrix
         score = metric_fn(dataholder, random_state)
-        result_dict = {"seed": seed, "f": f, "score": score, "extra_params": extra_param_id, "param_names": param_names}
+        result_dict = {'K':K, 'alpha':alpha, "seed": seed, "f": f, "score": score, "extra_params": extra_param_id, "param_names": param_names}
         results.append(result_dict)
         gin.clear_config()
 

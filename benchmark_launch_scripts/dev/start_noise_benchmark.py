@@ -75,9 +75,9 @@ if __name__ == "__main__":
     for noise_mode in noise_modes:
         all_results = {}
 
-        ks = [1, 8]
+        ks = [1]
         if noise_mode == NoiseMode.IGNORE_FACTORS:
-            num_factors = 5
+            num_factors = 4
             alphas = np.arange(0, num_factors-1, 1)
         else:
             alphas = np.arange(0, 1.01, 0.2)

@@ -113,9 +113,8 @@ class NoiseDataHolder(DataHolder):
                 elif self.noise_mode == NoiseMode.EXTRA_Z_COLLAPSED_TO_UNCOLLAPSED or self.noise_mode == NoiseMode.IGNORE_FACTORS:
                     rep = np.matmul(continuous_features, R)
                     if self.noise_mode == NoiseMode.IGNORE_FACTORS:
-                        rep = rep[:int(num_factors-alpha)]
                         continuous_features = continuous_features[:int(num_factors-alpha)]
-                        discrete_factors = discrete_factors[:int(num_factors - alpha)]
+                        discrete_features = discrete_features[:int(num_factors - alpha)]
 
                 representations.append(rep)
                 continuous_factors.append(continuous_features)
@@ -123,7 +122,7 @@ class NoiseDataHolder(DataHolder):
 
         representations = np.asarray(representations)
         # Amplitude-Fixed Noisy codes
-        if not self.n_extra_z == 0 and (self.noise_mode == NoiseMode.NOISE_DECAY_EXTRA_Z or self.noise_mode == NoiseMode.IGNORE_FACTORS):
+        if not self.n_extra_z == 0 and (self.noise_mode == NoiseMode.NOISE_DECAY_EXTRA_Z):
             noise = random_state.uniform(-1, 1, size=(len(representations), self.n_extra_z))
             representations = np.concatenate((representations, noise), axis=1)
 
